@@ -1,0 +1,12 @@
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/AirTunesSharp.csproj.AssemblyReference.cache
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/AirTunesSharp.GeneratedMSBuildEditorConfig.editorconfig
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/AirTunesSharp.AssemblyInfoInputs.cache
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/AirTunesSharp.AssemblyInfo.cs
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/AirTunesSharp.csproj.CoreCompileInputs.cache
+/home/ubuntu/AirTunesSharp/bin/Debug/net6.0/AirTunesSharp.deps.json
+/home/ubuntu/AirTunesSharp/bin/Debug/net6.0/AirTunesSharp.dll
+/home/ubuntu/AirTunesSharp/bin/Debug/net6.0/ref/AirTunesSharp.dll
+/home/ubuntu/AirTunesSharp/bin/Debug/net6.0/AirTunesSharp.pdb
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/AirTunesSharp.dll
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/ref/AirTunesSharp.dll
+/home/ubuntu/AirTunesSharp/obj/Debug/net6.0/AirTunesSharp.pdb
