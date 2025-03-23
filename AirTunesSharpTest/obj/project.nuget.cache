@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "gE/GaIjQv+g=",
+  "dgSpecHash": "t5jbbcl9uYo=",
   "success": true,
   "projectFilePath": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\AirTunesSharpTest.csproj",
   "expectedPackageFiles": [
@@ -92,7 +92,8 @@
     "C:\\Users\\vapormusic\\.nuget\\packages\\system.threading.timer\\4.3.0\\system.threading.timer.4.3.0.nupkg.sha512",
     "C:\\Users\\vapormusic\\.nuget\\packages\\system.xml.readerwriter\\4.3.0\\system.xml.readerwriter.4.3.0.nupkg.sha512",
     "C:\\Users\\vapormusic\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512",
-    "C:\\Users\\vapormusic\\.nuget\\packages\\tmds.libc\\0.2.0\\tmds.libc.0.2.0.nupkg.sha512"
+    "C:\\Users\\vapormusic\\.nuget\\packages\\tmds.libc\\0.2.0\\tmds.libc.0.2.0.nupkg.sha512",
+    "C:\\Users\\vapormusic\\.nuget\\packages\\tmds.mdns\\0.8.0\\tmds.mdns.0.8.0.nupkg.sha512"
   ],
   "logs": []
 }

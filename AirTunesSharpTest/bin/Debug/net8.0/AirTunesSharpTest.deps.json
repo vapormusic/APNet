@@ -9,7 +9,6 @@
       "AirTunesSharpTest/1.0.0": {
         "dependencies": {
           "AirTunesSharp": "1.0.0",
-          "Makaretu.Dns": "2.0.1",
           "Makaretu.Dns.Multicast": "0.27.0",
           "SimpleBase": "4.0.2"
         },
@@ -872,15 +871,25 @@
           }
         }
       },
+      "Tmds.MDns/0.8.0": {
+        "runtime": {
+          "lib/net6.0/Tmds.MDns.dll": {
+            "assemblyVersion": "0.8.0.0",
+            "fileVersion": "0.8.0.0"
+          }
+        }
+      },
       "AirTunesSharp/1.0.0": {
         "dependencies": {
           "Dorssel.Security.Cryptography.AesExtra": "2.0.0",
+          "Makaretu.Dns.Multicast": "0.27.0",
           "NaCl.Core": "2.0.6",
           "Rebex.Elliptic.Curve25519": "1.2.2",
           "Rebex.Elliptic.Ed25519": "1.2.2",
           "Rebex.Security": "7.0.9209",
           "System.Net.Sockets": "4.3.0",
-          "System.Security.Cryptography.Algorithms": "4.3.1"
+          "System.Security.Cryptography.Algorithms": "4.3.1",
+          "Tmds.MDns": "0.8.0"
         },
         "runtime": {
           "AirTunesSharp.dll": {
@@ -1519,6 +1528,13 @@
       "sha512": "sha512-+RvLuNHOLW7cxzgDe9yHLoayBgjsuH2/gJtJnuVMxweKrxxYT6TwQNAmt06SFWpjwk68aRcwwD4FfMMA6tZvVA==",
       "path": "tmds.libc/0.2.0",
       "hashPath": "tmds.libc.0.2.0.nupkg.sha512"
+    },
+    "Tmds.MDns/0.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-MFs9hHumcfr3GqGavqPKspcqijpMRJMZ43PSaX8eTCJcLYHt9MsvtOI20w/wjCGekdI5SYeSc1oHPFeWdCCIpA==",
+      "path": "tmds.mdns/0.8.0",
+      "hashPath": "tmds.mdns.0.8.0.nupkg.sha512"
     },
     "AirTunesSharp/1.0.0": {
       "type": "project",

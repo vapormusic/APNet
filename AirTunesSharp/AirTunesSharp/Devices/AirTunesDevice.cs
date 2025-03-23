@@ -135,6 +135,10 @@ namespace AirTunesSharp.Devices
                     Emit(err);
             });
 
+            _rtsp.On("need_password", args => {
+                Emit("status","need_password");
+            });
+
             _rtsp.StartHandshake(_udpServers, _host, _port);
         }
 

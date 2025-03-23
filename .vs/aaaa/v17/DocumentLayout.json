@@ -38,8 +38,12 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{dcc4ea97-1c0c-482b-b205-e541c0df9728}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -48,7 +52,7 @@
               "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
               "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
               "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAN4AAAAAAAAAAAAcwK8AAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-22T23:05:29.424Z",
               "EditorCaption": ""
@@ -63,8 +67,7 @@
               "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:28.755Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-22T23:05:28.755Z"
             },
             {
               "$type": "Document",
@@ -76,8 +79,7 @@
               "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:27.85Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-22T23:05:27.85Z"
             },
             {
               "$type": "Document",
@@ -89,8 +91,7 @@
               "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Network\\Ntp.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:26.535Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-22T23:05:26.535Z"
             },
             {
               "$type": "Document",
@@ -102,8 +103,7 @@
               "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:25.69Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-22T23:05:25.69Z"
             },
             {
               "$type": "Document",
@@ -115,25 +115,19 @@
               "RelativeToolTip": "AirTunesSharpTest\\Program.cs",
               "ViewState": "AgIAAOoAAAAAAAAAAAAYwA4AAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T22:24:00.904Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{dcc4ea97-1c0c-482b-b205-e541c0df9728}"
+              "WhenOpened": "2025-03-22T22:24:00.904Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 6,
-              "Title": "AirTunesSharpTest",
+              "Title": "AirTunesSharpTest.csproj",
               "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\AirTunesSharpTest.csproj",
               "RelativeDocumentMoniker": "AirTunesSharpTest\\AirTunesSharpTest.csproj",
               "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\AirTunesSharpTest.csproj",
               "RelativeToolTip": "AirTunesSharpTest\\AirTunesSharpTest.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-03-22T22:22:52.185Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-22T22:22:52.185Z"
             }
           ]
         }
