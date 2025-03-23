@@ -2,6 +2,19 @@
   "version": 3,
   "targets": {
     "net8.0": {
+      "Dorssel.Security.Cryptography.AesExtra/2.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Dorssel.Security.Cryptography.AesExtra.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Dorssel.Security.Cryptography.AesExtra.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.NETCore.Platforms/1.1.0": {
         "type": "package",
         "compile": {
@@ -18,6 +31,70 @@
         },
         "runtime": {
           "lib/netstandard1.0/_._": {}
+        }
+      },
+      "NaCl.Core/2.0.6": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/NaCl.Core.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/NaCl.Core.dll": {}
+        }
+      },
+      "Rebex.Common/7.0.9209": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Rebex.Common.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Rebex.Common.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Rebex.Elliptic.Curve25519/1.2.2": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Rebex.Curve25519.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Rebex.Curve25519.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Rebex.Elliptic.Ed25519/1.2.2": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Rebex.Ed25519.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Rebex.Ed25519.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Rebex.Security/7.0.9209": {
+        "type": "package",
+        "dependencies": {
+          "Rebex.Common": "[7.0.9209]"
+        },
+        "compile": {
+          "lib/net8.0/Rebex.Security.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Rebex.Security.dll": {
+            "related": ".xml"
+          }
         }
       },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.2": {
@@ -532,6 +609,23 @@
     }
   },
   "libraries": {
+    "Dorssel.Security.Cryptography.AesExtra/2.0.0": {
+      "sha512": "902RDgutjrU1n6mvJHG5lwViIbjLhwMdM9z7bpdR6ejG7rG84MMUy8O4+Vwdjp4m3325ggFpykPyRMmiTW3x3g==",
+      "type": "package",
+      "path": "dorssel.security.cryptography.aesextra/2.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "README.md",
+        "dorssel.security.cryptography.aesextra.2.0.0.nupkg.sha512",
+        "dorssel.security.cryptography.aesextra.nuspec",
+        "lib/net8.0/Dorssel.Security.Cryptography.AesExtra.dll",
+        "lib/net8.0/Dorssel.Security.Cryptography.AesExtra.xml",
+        "lib/netstandard2.0/Dorssel.Security.Cryptography.AesExtra.dll",
+        "lib/netstandard2.0/Dorssel.Security.Cryptography.AesExtra.xml"
+      ]
+    },
     "Microsoft.NETCore.Platforms/1.1.0": {
       "sha512": "kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
       "type": "package",
@@ -560,6 +654,159 @@
         "microsoft.netcore.targets.1.1.0.nupkg.sha512",
         "microsoft.netcore.targets.nuspec",
         "runtime.json"
+      ]
+    },
+    "NaCl.Core/2.0.6": {
+      "sha512": "J8co7cuJYhFssqG2IlwT/v1WHx17kx9wK4XZjYlzRwEQVAKV+Bja02BBmqMobbpCsWIQvhvmLuJsYPjm9uh3xQ==",
+      "type": "package",
+      "path": "nacl.core/2.0.6",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net45/NaCl.Core.dll",
+        "lib/net48/NaCl.Core.dll",
+        "lib/net481/NaCl.Core.dll",
+        "lib/net6.0/NaCl.Core.dll",
+        "lib/net8.0/NaCl.Core.dll",
+        "lib/net9.0/NaCl.Core.dll",
+        "lib/netcoreapp3.1/NaCl.Core.dll",
+        "lib/netstandard2.0/NaCl.Core.dll",
+        "lib/netstandard2.1/NaCl.Core.dll",
+        "nacl.core.2.0.6.nupkg.sha512",
+        "nacl.core.nuspec"
+      ]
+    },
+    "Rebex.Common/7.0.9209": {
+      "sha512": "bh+Wv6A5+uPtCVAymS5ZCuhxt0D4AU8d2bKnlfINi4M7xfbMqzQaYyqWWDwPHwsBRHgdD7YyFTemXvG/RyZEog==",
+      "type": "package",
+      "path": "rebex.common/7.0.9209",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "images/Rebex.Common.png",
+        "lib/net35/Rebex.Common.dll",
+        "lib/net35/Rebex.Common.xml",
+        "lib/net40/Rebex.Common.dll",
+        "lib/net40/Rebex.Common.xml",
+        "lib/net46/Rebex.Common.dll",
+        "lib/net46/Rebex.Common.xml",
+        "lib/net5.0/Rebex.Common.dll",
+        "lib/net5.0/Rebex.Common.xml",
+        "lib/net6.0/Rebex.Common.dll",
+        "lib/net6.0/Rebex.Common.xml",
+        "lib/net7.0/Rebex.Common.dll",
+        "lib/net7.0/Rebex.Common.xml",
+        "lib/net8.0/Rebex.Common.dll",
+        "lib/net8.0/Rebex.Common.xml",
+        "lib/net9.0/Rebex.Common.dll",
+        "lib/net9.0/Rebex.Common.xml",
+        "lib/netcoreapp3.1/Rebex.Common.dll",
+        "lib/netcoreapp3.1/Rebex.Common.xml",
+        "lib/netstandard2.0/Rebex.Common.dll",
+        "lib/netstandard2.0/Rebex.Common.xml",
+        "lib/netstandard2.1/Rebex.Common.dll",
+        "lib/netstandard2.1/Rebex.Common.xml",
+        "license.txt",
+        "rebex.common.7.0.9209.nupkg.sha512",
+        "rebex.common.nuspec"
+      ]
+    },
+    "Rebex.Elliptic.Curve25519/1.2.2": {
+      "sha512": "DDKAk1zP6++FQm0iZFLUnuF+sQxHL1ZrOdKA9LR/lPmJLAIQ/g/kvRTkV3+9lx/JYkvbKoG1GftdodOgA1z/Cg==",
+      "type": "package",
+      "path": "rebex.elliptic.curve25519/1.2.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "lib/monoandroid40/Rebex.Curve25519.dll",
+        "lib/monoandroid40/Rebex.Curve25519.xml",
+        "lib/net20/Rebex.Curve25519.dll",
+        "lib/net20/Rebex.Curve25519.xml",
+        "lib/net40/Rebex.Curve25519.dll",
+        "lib/net40/Rebex.Curve25519.xml",
+        "lib/net6.0/Rebex.Curve25519.dll",
+        "lib/net6.0/Rebex.Curve25519.xml",
+        "lib/net8.0/Rebex.Curve25519.dll",
+        "lib/net8.0/Rebex.Curve25519.xml",
+        "lib/netstandard1.5/Rebex.Curve25519.dll",
+        "lib/netstandard1.5/Rebex.Curve25519.xml",
+        "lib/netstandard2.0/Rebex.Curve25519.dll",
+        "lib/netstandard2.0/Rebex.Curve25519.xml",
+        "lib/netstandard2.1/Rebex.Curve25519.dll",
+        "lib/netstandard2.1/Rebex.Curve25519.xml",
+        "lib/xamarinios10/Rebex.Curve25519.dll",
+        "lib/xamarinios10/Rebex.Curve25519.xml",
+        "rebex.elliptic.curve25519.1.2.2.nupkg.sha512",
+        "rebex.elliptic.curve25519.nuspec"
+      ]
+    },
+    "Rebex.Elliptic.Ed25519/1.2.2": {
+      "sha512": "19Fopd+m6rkrotbA9XY1bJ7BOL1N5cipC6K2RLshY1y6jEGC+5cCl2OgRGDhEda3CQ2vbNQUZORlqUkMTErblw==",
+      "type": "package",
+      "path": "rebex.elliptic.ed25519/1.2.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "lib/monoandroid40/Rebex.Ed25519.dll",
+        "lib/monoandroid40/Rebex.Ed25519.xml",
+        "lib/net20/Rebex.Ed25519.dll",
+        "lib/net20/Rebex.Ed25519.xml",
+        "lib/net40/Rebex.Ed25519.dll",
+        "lib/net40/Rebex.Ed25519.xml",
+        "lib/net6.0/Rebex.Ed25519.dll",
+        "lib/net6.0/Rebex.Ed25519.xml",
+        "lib/net8.0/Rebex.Ed25519.dll",
+        "lib/net8.0/Rebex.Ed25519.xml",
+        "lib/netstandard1.5/Rebex.Ed25519.dll",
+        "lib/netstandard1.5/Rebex.Ed25519.xml",
+        "lib/netstandard2.0/Rebex.Ed25519.dll",
+        "lib/netstandard2.0/Rebex.Ed25519.xml",
+        "lib/netstandard2.1/Rebex.Ed25519.dll",
+        "lib/netstandard2.1/Rebex.Ed25519.xml",
+        "lib/xamarinios10/Rebex.Ed25519.dll",
+        "lib/xamarinios10/Rebex.Ed25519.xml",
+        "rebex.elliptic.ed25519.1.2.2.nupkg.sha512",
+        "rebex.elliptic.ed25519.nuspec"
+      ]
+    },
+    "Rebex.Security/7.0.9209": {
+      "sha512": "ft+wAg89bNN8cUb2kkCte4DfTLU2Pmm6KhOLSU+2udPRb9iREpP0Y1XFYf6SJ4ISZ+V7Twx/Rrq5ixg3UEPX4A==",
+      "type": "package",
+      "path": "rebex.security/7.0.9209",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "images/Rebex.Security.png",
+        "lib/net35/Rebex.Security.dll",
+        "lib/net35/Rebex.Security.xml",
+        "lib/net40/Rebex.Security.dll",
+        "lib/net40/Rebex.Security.xml",
+        "lib/net46/Rebex.Security.dll",
+        "lib/net46/Rebex.Security.xml",
+        "lib/net5.0/Rebex.Security.dll",
+        "lib/net5.0/Rebex.Security.xml",
+        "lib/net6.0/Rebex.Security.dll",
+        "lib/net6.0/Rebex.Security.xml",
+        "lib/net7.0/Rebex.Security.dll",
+        "lib/net7.0/Rebex.Security.xml",
+        "lib/net8.0/Rebex.Security.dll",
+        "lib/net8.0/Rebex.Security.xml",
+        "lib/net9.0/Rebex.Security.dll",
+        "lib/net9.0/Rebex.Security.xml",
+        "lib/netcoreapp3.1/Rebex.Security.dll",
+        "lib/netcoreapp3.1/Rebex.Security.xml",
+        "lib/netstandard2.0/Rebex.Security.dll",
+        "lib/netstandard2.0/Rebex.Security.xml",
+        "lib/netstandard2.1/Rebex.Security.dll",
+        "lib/netstandard2.1/Rebex.Security.xml",
+        "license.txt",
+        "rebex.security.7.0.9209.nupkg.sha512",
+        "rebex.security.nuspec"
       ]
     },
     "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.2": {
@@ -2253,6 +2500,11 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "Dorssel.Security.Cryptography.AesExtra >= 2.0.0",
+      "NaCl.Core >= 2.0.6",
+      "Rebex.Elliptic.Curve25519 >= 1.2.2",
+      "Rebex.Elliptic.Ed25519 >= 1.2.2",
+      "Rebex.Security >= 7.0.9209",
       "System.Net.Sockets >= 4.3.0",
       "System.Security.Cryptography.Algorithms >= 4.3.1"
     ]
@@ -2307,6 +2559,26 @@
       "net8.0": {
         "targetAlias": "net8.0",
         "dependencies": {
+          "Dorssel.Security.Cryptography.AesExtra": {
+            "target": "Package",
+            "version": "[2.0.0, )"
+          },
+          "NaCl.Core": {
+            "target": "Package",
+            "version": "[2.0.6, )"
+          },
+          "Rebex.Elliptic.Curve25519": {
+            "target": "Package",
+            "version": "[1.2.2, )"
+          },
+          "Rebex.Elliptic.Ed25519": {
+            "target": "Package",
+            "version": "[1.2.2, )"
+          },
+          "Rebex.Security": {
+            "target": "Package",
+            "version": "[7.0.9209, )"
+          },
           "System.Net.Sockets": {
             "target": "Package",
             "version": "[4.3.0, )"

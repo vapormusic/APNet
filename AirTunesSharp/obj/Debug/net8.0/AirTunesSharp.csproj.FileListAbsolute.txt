@@ -20,3 +20,5 @@ C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Debug\net8.0\AirTunesSharp.
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Debug\net8.0\refint\AirTunesSharp.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Debug\net8.0\AirTunesSharp.pdb
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Debug\net8.0\ref\AirTunesSharp.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Debug\net8.0\AirTunesSharp.sourcelink.json
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Debug\net8.0\AirTunesSharp.csproj.AssemblyReference.cache

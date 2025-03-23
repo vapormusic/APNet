@@ -46,6 +46,14 @@
           }
         }
       },
+      "Dorssel.Security.Cryptography.AesExtra/2.0.0": {
+        "runtime": {
+          "lib/net8.0/Dorssel.Security.Cryptography.AesExtra.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.0.427"
+          }
+        }
+      },
       "IPNetwork2/2.1.2": {
         "dependencies": {
           "NETStandard.Library": "1.6.1"
@@ -111,6 +119,14 @@
           "System.Runtime": "4.3.0"
         }
       },
+      "NaCl.Core/2.0.6": {
+        "runtime": {
+          "lib/net8.0/NaCl.Core.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.6.0"
+          }
+        }
+      },
       "NETStandard.Library/1.6.1": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "1.1.0",
@@ -157,6 +173,41 @@
           "System.Threading.Timer": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0",
           "System.Xml.XDocument": "4.3.0"
+        }
+      },
+      "Rebex.Common/7.0.9209": {
+        "runtime": {
+          "lib/net8.0/Rebex.Common.dll": {
+            "assemblyVersion": "7.0.9209.0",
+            "fileVersion": "7.0.9209.0"
+          }
+        }
+      },
+      "Rebex.Elliptic.Curve25519/1.2.2": {
+        "runtime": {
+          "lib/net8.0/Rebex.Curve25519.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Rebex.Elliptic.Ed25519/1.2.2": {
+        "runtime": {
+          "lib/net8.0/Rebex.Ed25519.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Rebex.Security/7.0.9209": {
+        "dependencies": {
+          "Rebex.Common": "7.0.9209"
+        },
+        "runtime": {
+          "lib/net8.0/Rebex.Security.dll": {
+            "assemblyVersion": "7.0.9209.0",
+            "fileVersion": "7.0.9209.0"
+          }
         }
       },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.2": {},
@@ -823,6 +874,11 @@
       },
       "AirTunesSharp/1.0.0": {
         "dependencies": {
+          "Dorssel.Security.Cryptography.AesExtra": "2.0.0",
+          "NaCl.Core": "2.0.6",
+          "Rebex.Elliptic.Curve25519": "1.2.2",
+          "Rebex.Elliptic.Ed25519": "1.2.2",
+          "Rebex.Security": "7.0.9209",
           "System.Net.Sockets": "4.3.0",
           "System.Security.Cryptography.Algorithms": "4.3.1"
         },
@@ -854,6 +910,13 @@
       "sha512": "sha512-wLHldZHvxsSD6Ahonfj00/SkfHfKqO+YT6jsUwVm8Rch1REL9IArHAcSLXxYxYfu5/4ydGtmXvOtaH3AkVPu0A==",
       "path": "common.logging.core/3.4.1",
       "hashPath": "common.logging.core.3.4.1.nupkg.sha512"
+    },
+    "Dorssel.Security.Cryptography.AesExtra/2.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-902RDgutjrU1n6mvJHG5lwViIbjLhwMdM9z7bpdR6ejG7rG84MMUy8O4+Vwdjp4m3325ggFpykPyRMmiTW3x3g==",
+      "path": "dorssel.security.cryptography.aesextra/2.0.0",
+      "hashPath": "dorssel.security.cryptography.aesextra.2.0.0.nupkg.sha512"
     },
     "IPNetwork2/2.1.2": {
       "type": "package",
@@ -904,12 +967,47 @@
       "path": "microsoft.win32.primitives/4.3.0",
       "hashPath": "microsoft.win32.primitives.4.3.0.nupkg.sha512"
     },
+    "NaCl.Core/2.0.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-J8co7cuJYhFssqG2IlwT/v1WHx17kx9wK4XZjYlzRwEQVAKV+Bja02BBmqMobbpCsWIQvhvmLuJsYPjm9uh3xQ==",
+      "path": "nacl.core/2.0.6",
+      "hashPath": "nacl.core.2.0.6.nupkg.sha512"
+    },
     "NETStandard.Library/1.6.1": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-WcSp3+vP+yHNgS8EV5J7pZ9IRpeDuARBPN28by8zqff1wJQXm26PVU8L3/fYLBJVU7BtDyqNVWq2KlCVvSSR4A==",
       "path": "netstandard.library/1.6.1",
       "hashPath": "netstandard.library.1.6.1.nupkg.sha512"
+    },
+    "Rebex.Common/7.0.9209": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-bh+Wv6A5+uPtCVAymS5ZCuhxt0D4AU8d2bKnlfINi4M7xfbMqzQaYyqWWDwPHwsBRHgdD7YyFTemXvG/RyZEog==",
+      "path": "rebex.common/7.0.9209",
+      "hashPath": "rebex.common.7.0.9209.nupkg.sha512"
+    },
+    "Rebex.Elliptic.Curve25519/1.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DDKAk1zP6++FQm0iZFLUnuF+sQxHL1ZrOdKA9LR/lPmJLAIQ/g/kvRTkV3+9lx/JYkvbKoG1GftdodOgA1z/Cg==",
+      "path": "rebex.elliptic.curve25519/1.2.2",
+      "hashPath": "rebex.elliptic.curve25519.1.2.2.nupkg.sha512"
+    },
+    "Rebex.Elliptic.Ed25519/1.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-19Fopd+m6rkrotbA9XY1bJ7BOL1N5cipC6K2RLshY1y6jEGC+5cCl2OgRGDhEda3CQ2vbNQUZORlqUkMTErblw==",
+      "path": "rebex.elliptic.ed25519/1.2.2",
+      "hashPath": "rebex.elliptic.ed25519.1.2.2.nupkg.sha512"
+    },
+    "Rebex.Security/7.0.9209": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ft+wAg89bNN8cUb2kkCte4DfTLU2Pmm6KhOLSU+2udPRb9iREpP0Y1XFYf6SJ4ISZ+V7Twx/Rrq5ixg3UEPX4A==",
+      "path": "rebex.security/7.0.9209",
+      "hashPath": "rebex.security.7.0.9209.nupkg.sha512"
     },
     "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.2": {
       "type": "package",

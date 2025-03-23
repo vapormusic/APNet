@@ -28,25 +28,8 @@ namespace AirTunesSharpTest
                 // Load audio data from output.pcm
                 Console.WriteLine("Loading audio data from output.pcm...");
                 byte[] audioData = System.IO.File.ReadAllBytes("C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\output.pcm");
-                // Console.WriteLine("Generating test audio data...");
-                // byte[] audioData = new byte[4096];
-                // new Random().NextBytes(audioData);
 
-                // Test ALAC encoder
-                // random sample buffer
-                var alacData = AirTunesSharp.Audio.AlacEncoder.PcmToAlac(audioData.Skip(1408* 300).Take(352 * 4).ToArray(), 352, 352);
-                 // get md5 hash of the alac data
-                Console.WriteLine(AirTunesSharp.Utils.NumUtil.ComputeMD5(alacData));
-                await Task.Delay(1000);
-
-                // encrypt the alac data
-                var encryptedData = AirTunesSharp.Utils.AirTunesEncryption.EncryptAES(alacData);
-                // get md5 hash of the encrypted data
-                Console.WriteLine(AirTunesSharp.Utils.NumUtil.ComputeMD5(encryptedData));
-                await Task.Delay(1000);
                 var idx = 0;
-
-
 
                 // Set up event handlers
                 airTunes.On("device", (eventArgs) => {
@@ -63,8 +46,8 @@ namespace AirTunesSharpTest
                 
                 airTunes.On("drain", (eventArgs) => {
                     Console.WriteLine("Drain event");
-                    airTunes.Write(audioData.Skip(idx).Take(352 * 4 * 300).ToArray());
-                    idx += 352 * 4 * 300;
+                    airTunes.Write(audioData.Skip(352 * 4 * idx).Take(352 * 4 * 300).ToArray());
+                    idx += 300;
                 });
                 
                 airTunes.On("error", (eventArgs) => {
@@ -122,68 +105,34 @@ namespace AirTunesSharpTest
                         
                         await Task.Delay(1000);
                         
-                        // Set track info
-                        // Console.WriteLine("Setting track info...");
-                        // airTunes.SetTrackInfo(device.Key, "Test Song", "Test Artist", "Test Album", (Action<object[]>)((args) => {
-                        //     Console.WriteLine("Track info set successfully");
-                        // }));
+
                         
-                        await Task.Delay(1000);
-                        
-
-                        byte[] MakeRTPHeader(AirTunesSharp.Audio.Packet packet)
-                        {
-                            byte[] header = new byte[12];
-
-                            if (packet.Seq == 0)
-                            {
-                                header[0] = 0x80;
-                                header[1] = 0xe0;
-                            }
-                            else
-                            {
-                                header[0] = 0x80;
-                                header[1] = 0x60;
-                            }
-
-                            ushort seq = AirTunesSharp.Utils.NumUtil.Low16((int)packet.Seq);
-                            header[2] = (byte)(seq >> 8);
-                            header[3] = (byte)(seq & 0xFF);
-
-                            byte[] timestampBytes = BitConverter.GetBytes(packet.Timestamp);
-                            if (BitConverter.IsLittleEndian)
-                                Array.Reverse(timestampBytes);
-                            Buffer.BlockCopy(timestampBytes, 0, header, 4, 4);
-
-                            byte[] magicBytes = BitConverter.GetBytes(0x12345678);
-                            if (BitConverter.IsLittleEndian)
-                                Array.Reverse(magicBytes);
-                            Buffer.BlockCopy(magicBytes, 0, header, 8, 4);
-
-                            return header;
-                        }
-
-                        AirTunesSharp.Audio.Packet packet = new AirTunesSharp.Audio.Packet(new AirTunesSharp.Audio.PacketPool());
-                        packet.Seq = 10;
-                        packet.Timestamp = 3403;
-                        byte[] k = MakeRTPHeader(packet);
-                        Console.WriteLine($"rtp: {Convert.ToHexString(k)}");
-
-
-
-
                         
                         // Write audio data
                         Console.WriteLine("Writing audio data...");
                         bool writeResult = airTunes.Write(audioData.Take(352 * 4 * 300).ToArray());
-                        idx += 352 * 4 * 300;
+                        idx += 300;
                         Console.WriteLine($"Write result: {writeResult}");
                         
                         // Wait a bit
                         Console.WriteLine("Waiting for audio playback...");
-                        while(true);
-                        
 
+                        
+                        // Set track info
+                        // Console.WriteLine("Setting track info...");
+                        airTunes.SetTrackInfo(device.Key, "Track 1: Ew", "Joji", "Nectar", (Action<object[]>)((args) => {
+                            Console.WriteLine("Track info set successfully");
+                        }));
+
+                        /// Set artwork
+                        Console.WriteLine("Setting artwork...");
+                        byte[] artwork = System.IO.File.ReadAllBytes("C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\artwork.png");
+
+                        airTunes.SetArtwork(device.Key, artwork, "image/png", (Action<object[]>)((args) => {
+                            Console.WriteLine("Artwork set successfully");
+                        }));
+                        
+                        await Task.Delay(1000);
                         
                         // End audio stream
                         // Console.WriteLine("Ending audio stream...");
@@ -196,6 +145,7 @@ namespace AirTunesSharpTest
                         // airTunes.StopAll(() => {
                         //     Console.WriteLine("All devices stopped");
                         // });
+                        while(true);
                     }
                     else
                     {

@@ -52,3 +52,10 @@ C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Debug\net8.0\refint\Air
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Debug\net8.0\AirTunesSharpTest.pdb
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Debug\net8.0\AirTunesSharpTest.genruntimeconfig.cache
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Debug\net8.0\ref\AirTunesSharpTest.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Debug\net8.0\AirTunesSharpTest.sourcelink.json
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\Dorssel.Security.Cryptography.AesExtra.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\NaCl.Core.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\Rebex.Common.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\Rebex.Curve25519.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\Rebex.Ed25519.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\Rebex.Security.dll

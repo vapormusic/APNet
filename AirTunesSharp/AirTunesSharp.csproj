@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dorssel.Security.Cryptography.AesExtra" Version="2.0.0" />
+    <PackageReference Include="NaCl.Core" Version="2.0.6" />
+    <PackageReference Include="Rebex.Elliptic.Curve25519" Version="1.2.2" />
+    <PackageReference Include="Rebex.Elliptic.Ed25519" Version="1.2.2" />
+    <PackageReference Include="Rebex.Security" Version="7.0.9209" />
     <PackageReference Include="System.Net.Sockets" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
   </ItemGroup>

@@ -1,11 +1,17 @@
 {
   "version": 2,
-  "dgSpecHash": "nIUkx4eGbtQ=",
+  "dgSpecHash": "gLGSrjrwePE=",
   "success": true,
   "projectFilePath": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\vapormusic\\.nuget\\packages\\dorssel.security.cryptography.aesextra\\2.0.0\\dorssel.security.cryptography.aesextra.2.0.0.nupkg.sha512",
     "C:\\Users\\vapormusic\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
     "C:\\Users\\vapormusic\\.nuget\\packages\\microsoft.netcore.targets\\1.1.0\\microsoft.netcore.targets.1.1.0.nupkg.sha512",
+    "C:\\Users\\vapormusic\\.nuget\\packages\\nacl.core\\2.0.6\\nacl.core.2.0.6.nupkg.sha512",
+    "C:\\Users\\vapormusic\\.nuget\\packages\\rebex.common\\7.0.9209\\rebex.common.7.0.9209.nupkg.sha512",
+    "C:\\Users\\vapormusic\\.nuget\\packages\\rebex.elliptic.curve25519\\1.2.2\\rebex.elliptic.curve25519.1.2.2.nupkg.sha512",
+    "C:\\Users\\vapormusic\\.nuget\\packages\\rebex.elliptic.ed25519\\1.2.2\\rebex.elliptic.ed25519.1.2.2.nupkg.sha512",
+    "C:\\Users\\vapormusic\\.nuget\\packages\\rebex.security\\7.0.9209\\rebex.security.7.0.9209.nupkg.sha512",
     "C:\\Users\\vapormusic\\.nuget\\packages\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
     "C:\\Users\\vapormusic\\.nuget\\packages\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
     "C:\\Users\\vapormusic\\.nuget\\packages\\runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",

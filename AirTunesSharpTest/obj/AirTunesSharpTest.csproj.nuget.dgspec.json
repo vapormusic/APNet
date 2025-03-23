@@ -133,6 +133,26 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Dorssel.Security.Cryptography.AesExtra": {
+              "target": "Package",
+              "version": "[2.0.0, )"
+            },
+            "NaCl.Core": {
+              "target": "Package",
+              "version": "[2.0.6, )"
+            },
+            "Rebex.Elliptic.Curve25519": {
+              "target": "Package",
+              "version": "[1.2.2, )"
+            },
+            "Rebex.Elliptic.Ed25519": {
+              "target": "Package",
+              "version": "[1.2.2, )"
+            },
+            "Rebex.Security": {
+              "target": "Package",
+              "version": "[7.0.9209, )"
+            },
             "System.Net.Sockets": {
               "target": "Package",
               "version": "[4.3.0, )"

@@ -539,22 +539,33 @@ namespace AirTunesSharp.Network
         }
 
         
-        public byte[] DaapEncodeList(string field, params byte[][] values)
+        public byte[] DaapEncodeList(string field, string encoding = "ascii", params byte[][] values)
         {
             byte[] value = ConcatArrays(values);
             byte[] buf = new byte[field.Length + 4];
-            Encoding.ASCII.GetBytes(field).CopyTo(buf, 0);
+            if (encoding == "utf-8") {
+                Encoding.UTF8.GetBytes(field).CopyTo(buf, 0);
+            }
+            else {
+                Encoding.ASCII.GetBytes(field).CopyTo(buf, 0);
+            }
+
             BitConverter.GetBytes((uint)value.Length).CopyTo(buf, field.Length);
             Array.Reverse(buf, field.Length, 4); // Ensure big-endian order
             
             return ConcatArrays(buf, value);
         }
 
-        public byte[] DaapEncode(string field, string value)
+        public byte[] DaapEncode(string field, string encoding, string value)
         {
             byte[] valueBytes = Encoding.ASCII.GetBytes(value);
             byte[] buf = new byte[field.Length + valueBytes.Length + 4];
-            Encoding.ASCII.GetBytes(field).CopyTo(buf, 0);
+            if (encoding == "utf-8") {
+                Encoding.UTF8.GetBytes(field).CopyTo(buf, 0);
+            }
+            else {
+                Encoding.ASCII.GetBytes(field).CopyTo(buf, 0);
+            }
             BitConverter.GetBytes((uint)valueBytes.Length).CopyTo(buf, field.Length);
             Array.Reverse(buf, field.Length, 4); // Ensure big-endian order
             valueBytes.CopyTo(buf, field.Length + 4);
@@ -596,7 +607,9 @@ namespace AirTunesSharp.Network
         private void SendNextRequest(Dictionary<string, string>? digestInfo = null)
         {
             string request = "";
-            string body = "";
+            string body_str = "";
+            byte[] body = [];
+            
             
             Console.WriteLine($"Sending request: {_status}");
 
@@ -616,7 +629,7 @@ namespace AirTunesSharp.Network
                         
                     IPEndPoint localEndPoint = (IPEndPoint)_socket.Client.LocalEndPoint;
                     
-                    body =
+                    body_str =
                         "v=0\r\n" +
                         $"o=iTunes {_announceId} 0 IN IP4 {localEndPoint.Address.MapToIPv4()}\r\n" +
                         "s=iTunes\r\n" +
@@ -628,10 +641,12 @@ namespace AirTunesSharp.Network
                         
                     if (_requireEncryption)
                     {
-                        body +=
+                        body_str +=
                             $"a=rsaaeskey:{Config.RsaAeskeyBase64}\r\n" +
                             $"a=aesiv:{Config.IvBase64}\r\n";
                     }
+
+                    body = Encoding.ASCII.GetBytes(body_str);
 
                     request += MakeHeadWithURL("ANNOUNCE", digestInfo);
                     request +=
@@ -663,7 +678,8 @@ namespace AirTunesSharp.Network
 
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += "Content-Type: text/parameters\r\n";
-                    body = $"volume: {attenuation :F6}\r\n";
+                    body_str = $"volume: {attenuation :F6}\r\n";
+                    body = Encoding.ASCII.GetBytes(body_str);
                     request += $"Content-Length: {body.Length}\r\n\r\n";
                     break;
 
@@ -675,15 +691,26 @@ namespace AirTunesSharp.Network
                 case SETDAAP:
                     if (_trackInfo == null)
                         return;
+
+                    string daapenc = "ascii";
+                    //daapenc = true
+                    byte[] name = DaapEncode("minm", daapenc, _trackInfo.Name);
+                    byte[] artist = DaapEncode("asar", daapenc , _trackInfo.Artist);
+                    byte[] album = DaapEncode("asal", daapenc, _trackInfo.Album);
+                    byte[][] trackargs = new byte[][] { name, artist, album };
+
+                    byte[] daapInfo = DaapEncodeList("mlit", daapenc, trackargs);
                         
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += "Content-Type: application/x-dmap-tagged\r\n";
                     
+                    
                     // Create DAAP body - this would need a proper DAAP implementation
                     // For now, we'll use a placeholder
-                    body = "DAAP data would go here";
+                    body = daapInfo;
+
                     
-                    request += $"Content-Length: {body.Length}\r\n\r\n";
+                    request += $"Content-Length: {daapInfo.Length}\r\n\r\n";
                     break;
 
                 case SETART:
@@ -692,7 +719,7 @@ namespace AirTunesSharp.Network
                         
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += $"Content-Type: {_artworkContentType}\r\n";
-                    body = Convert.ToBase64String(_artwork);
+                    body = _artwork;
                     request += $"Content-Length: {_artwork.Length}\r\n\r\n";
                     break;
             }
@@ -701,7 +728,7 @@ namespace AirTunesSharp.Network
             {
                 try
                 {
-                    byte[] requestBytes = Encoding.ASCII.GetBytes(request + body);
+                    byte[] requestBytes = Encoding.ASCII.GetBytes(request).Concat(body).ToArray();
                     NetworkStream stream = _socket.GetStream();
                     stream.Write(requestBytes, 0, requestBytes.Length);
                     StartTimeout();
@@ -712,7 +739,7 @@ namespace AirTunesSharp.Network
                 }
             }
 
-            Console.WriteLine($"Sending request: {request + body}");
+            Console.WriteLine($"Sending request: {request} {Encoding.ASCII.GetString(body)}");
         }
 
         /// <summary>
