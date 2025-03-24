@@ -27,7 +27,8 @@ namespace AirTunesSharpTest
 
                 // Load audio data from output.pcm
                 Console.WriteLine("Loading audio data from output.pcm...");
-                byte[] audioData = System.IO.File.ReadAllBytes("C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\output.pcm");
+            
+                byte[] audioData = System.IO.File.ReadAllBytes("output.pcm");
 
                 var idx = 0;
 
@@ -72,7 +73,7 @@ namespace AirTunesSharpTest
                 Console.WriteLine("Scanning for devices...");
                 var deviceScanner = new AirTunesSharp.Utils.DeviceScanner();
                 deviceScanner.StartScanning();
-                await Task.Delay(5000);
+                Console.ReadLine();
                 deviceScanner.StopScanning();
                 Console.WriteLine("Scanning complete");
                 var devices = deviceScanner.GetAirPlayDevices();
@@ -91,7 +92,7 @@ namespace AirTunesSharpTest
                 }
 
                 // Prompt the user for the device IP
-                Console.Write("Enter AirPlay device IP address: ");
+                Console.Write("Enter AirPlay device IP address: (Default is first device found) ");
                 string deviceIp = Console.ReadLine();
 
                 if (string.IsNullOrEmpty(deviceIp))
@@ -105,15 +106,29 @@ namespace AirTunesSharpTest
 
                 var txtRecords = devices.Find(d => d["host"] == deviceIp.Trim())["txt"];
                 var deviceOptions = devices.Find(d => d["host"] == deviceIp.Trim())["options"];
-                Console.WriteLine($"Device options: {deviceOptions}");
+                Console.WriteLine($"Device options: {string.Join(",", deviceOptions)}");
 
                 // Check if device requires password
                 string password = null;
-                if (deviceOptions != null && deviceOptions["needPassword"])
+                deviceOptions["password"] = null;
+                if (deviceOptions != null && (deviceOptions["needPassword"] || deviceOptions["needPin"] ))
                 {
-                    Console.WriteLine("Device requires password, enter password: ");
+                    Console.WriteLine("Device requires password, enter password: (Default is 3939)");
                     deviceOptions["password"] = Console.ReadLine();
+                    if (string.IsNullOrEmpty(deviceOptions["password"]))
+                    {
+                        deviceOptions["password"] = "3939";
+                    }
                     
+                }
+
+                Console.WriteLine($"Device volume: (Default is 20)");
+                deviceOptions["volume"] = Console.ReadLine();
+                if (string.IsNullOrEmpty(deviceOptions["volume"]))
+                {
+                    deviceOptions["volume"] = 20;
+                } else {
+                    deviceOptions["volume"] = Int32.Parse(deviceOptions["volume"]);
                 }
 
 
@@ -121,7 +136,6 @@ namespace AirTunesSharpTest
                 dynamic expando = new ExpandoObject();
                 var expandoDict = (IDictionary<string, object>)expando;
                 expandoDict["host"] = deviceIp;
-                expandoDict["volume"] = 50;
                 expandoDict["port"] = Int32.Parse(devices.Find(d => d["host"] == deviceIp.Trim())["port"]);
 
                 foreach (var kvp in deviceOptions){
@@ -141,8 +155,8 @@ namespace AirTunesSharpTest
                     await Task.Delay(5000);
 
                     // Set volume
-                    Console.WriteLine("Setting volume to 50%...");
-                    airTunes.SetVolume(device.Key, 50, (Action<object[]>)((args) =>
+                    Console.WriteLine("Setting volume to 20%...");
+                    airTunes.SetVolume(device.Key, 20, (Action<object[]>)((args) =>
                     {
                         Console.WriteLine("Volume set successfully");
                     }));
@@ -168,7 +182,7 @@ namespace AirTunesSharpTest
 
                     /// Set artwork
                     Console.WriteLine("Setting artwork...");
-                    byte[] artwork = System.IO.File.ReadAllBytes("C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\artwork.png");
+                    byte[] artwork = System.IO.File.ReadAllBytes(".\\artwork.png");
 
                     airTunes.SetArtwork(device.Key, artwork, "image/png", (Action<object[]>)((args) =>
                     {

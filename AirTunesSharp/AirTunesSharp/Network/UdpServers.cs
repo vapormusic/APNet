@@ -136,7 +136,7 @@ namespace AirTunesSharp.Network
                 while (_status != UNBOUND && _control.Socket != null)
                 {
                     try
-                    {
+                    {          
                         var result = await _control.Socket.ReceiveAsync();
                         var rinfo = new { address = result.RemoteEndPoint.Address.ToString(), port = result.RemoteEndPoint.Port };
 

@@ -125,13 +125,19 @@ namespace AirTunesSharp.Audio
                     }
                     else
                     {
-                        // First buffer contains enough data to fill a packet: slice it
-                        Buffer.BlockCopy(_buffers[0], 0, packet.Pcm, offset, remaining);
-                        byte[] newBuffer = new byte[_buffers[0].Length - remaining];
-                        Buffer.BlockCopy(_buffers[0], remaining, newBuffer, 0, _buffers[0].Length - remaining);
-                        _buffers[0] = newBuffer;
-                        remaining = 0;
-                        offset += remaining;
+                        // try {
+                            // Console.WriteLine($"md5 first: {Utils.NumUtil.ComputeMD5(_buffers[0])}");
+
+                            // First buffer contains enough data to fill a packet: slice it
+                            Buffer.BlockCopy(_buffers[0], 0, packet.Pcm, offset, remaining);
+                            byte[] newBuffer = new byte[_buffers[0].Length - remaining];
+                            Buffer.BlockCopy(_buffers[0], remaining, newBuffer, 0, _buffers[0].Length - remaining);
+                            _buffers[0] = newBuffer;
+                            remaining = 0;
+                            offset += remaining;
+                    //    } catch (Exception e) {
+                    //         Console.WriteLine(e);
+                    //     }
                         // Console.WriteLine($"md5 first: {Utils.NumUtil.ComputeMD5(_buffers[0])}");
                         // Console.WriteLine(Convert.ToHexString(packet.Pcm));
                         // Console.WriteLine("Buffer slice, remaining: " + _buffers[0].Length);

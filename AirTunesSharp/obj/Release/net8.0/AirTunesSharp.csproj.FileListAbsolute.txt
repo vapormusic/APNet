@@ -1,0 +1,13 @@
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\bin\Release\net8.0\AirTunesSharp.deps.json
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\bin\Release\net8.0\AirTunesSharp.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\bin\Release\net8.0\AirTunesSharp.pdb
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.csproj.AssemblyReference.cache
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.AssemblyInfoInputs.cache
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.AssemblyInfo.cs
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.csproj.CoreCompileInputs.cache
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.sourcelink.json
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\refint\AirTunesSharp.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\AirTunesSharp.pdb
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharp\obj\Release\net8.0\ref\AirTunesSharp.dll

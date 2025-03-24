@@ -74,6 +74,8 @@ namespace AirTunesSharp.Network
 
         private Dictionary<string, string>? _digestInfo;
 
+        private bool _triedMd5Uppercase = false;
+
         /// <summary>
         /// Initializes a new instance of the RtspClient class
         /// </summary>
@@ -119,7 +121,8 @@ namespace AirTunesSharp.Network
             _timingPort = udpServers.Timing.Port;
 
             _socket = new TcpClient();
-            
+            _socket.ReceiveTimeout = 4000;
+            _socket.SendTimeout = 4000;           
             try
             {
                 _socket.ConnectAsync(host, port).ContinueWith(t => 
@@ -133,52 +136,54 @@ namespace AirTunesSharp.Network
                     ClearTimeout();
                     SendNextRequest();
                     StartHeartBeat();
-                });
 
-                NetworkStream stream = _socket.GetStream();
-                byte[] buffer = new byte[4096];
-                StringBuilder blob = new StringBuilder();
+                    NetworkStream stream = _socket.GetStream();
+                    byte[] buffer = new byte[4096];
+                    StringBuilder blob = new StringBuilder();
 
-                Task.Run(async () => 
-                {
-                    try
+                    Task.Run(async () => 
                     {
-                        while (_socket != null && _socket.Connected)
+                        try
                         {
-                            int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                            if (bytesRead <= 0)
+                            while (_socket != null && _socket.Connected)
                             {
-                                Cleanup("disconnected");
-                                break;
+                                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                                if (bytesRead <= 0)
+                                {
+                                    Cleanup("disconnected");
+                                    break;
+                                }
+
+                                ClearTimeout();
+
+                                string data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                                blob.Append(data);
+
+                                int endIndex = blob.ToString().IndexOf("\r\n\r\n");
+                                if (endIndex < 0)
+                                    continue;
+
+                                endIndex += 4;
+                                string response = blob.ToString().Substring(0, endIndex);
+                                ProcessData(response);
+
+                                blob.Clear();
+                                if (endIndex < data.Length)
+                                    blob.Append(data.Substring(endIndex));
                             }
-
-                            ClearTimeout();
-
-                            string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                            blob.Append(data);
-
-                            int endIndex = blob.ToString().IndexOf("\r\n\r\n");
-                            if (endIndex < 0)
-                                continue;
-
-                            endIndex += 4;
-                            string response = blob.ToString().Substring(0, endIndex);
-                            ProcessData(response);
-
-                            blob.Clear();
-                            if (endIndex < data.Length)
-                                blob.Append(data.Substring(endIndex));
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (_socket != null)
+                        catch (Exception ex)
                         {
-                            _socket = null;
-                            Cleanup("rtsp_socket", ex.Message);
+                            if (_socket != null)
+                            {
+                                _socket = null;
+                                Cleanup("rtsp_socket", ex.Message);
+                            }
                         }
-                    }
+                    });
                 });
+
+
             }
             catch (Exception)
             {
@@ -278,8 +283,10 @@ namespace AirTunesSharp.Network
         /// <param name="callback">Callback function</param>
         public void SetTrackInfo(string name, string artist, string album, Action<object[]> callback)
         {
-            if (_status != PLAYING)
-                return;
+            if ((_status < 2) || ((_status > 10) && (_status < 26)))
+            {
+               return;         
+            }
 
             _trackInfo = new TrackInfo
             {
@@ -289,7 +296,7 @@ namespace AirTunesSharp.Network
             };
             _status = SETDAAP;
             _callback = callback;
-            SendNextRequest();
+            SendNextRequest(null, SETDAAP);
         }
 
         /// <summary>
@@ -300,8 +307,11 @@ namespace AirTunesSharp.Network
         /// <param name="callback">Callback function</param>
         public void SetArtwork(byte[] art, string? contentType, Action<object[]> callback)
         {
-            if (_status != PLAYING)
-                return;
+            if ((_status < 2) || ((_status > 10) && (_status < 26))  )
+            {
+               return;         
+            }
+
 
             if (contentType == null)
                 return;
@@ -310,7 +320,7 @@ namespace AirTunesSharp.Network
             _artwork = art;
             _status = SETART;
             _callback = callback;
-            SendNextRequest();
+            SendNextRequest(null, SETART);
         }
 
         /// <summary>
@@ -367,7 +377,7 @@ namespace AirTunesSharp.Network
         {
             RtspResponse response = RtspResponse.ParseResponse(blob);
             Console.WriteLine($"Resp status: {_status} {response.Code} {response.Status}");
-            Console.WriteLine($"Headers: {response.Headers}");
+            Console.WriteLine($"Headers: {string.Join(Environment.NewLine, response.Headers)}");
             Console.WriteLine($"Body: {response.Body}");
 
             if (response.Code >= 400 & response.Code != 416)
@@ -388,14 +398,16 @@ namespace AirTunesSharp.Network
                         _digestInfo["password"] = _password;
                         _digestInfo["realm"] = _digestInfo["realm"].Trim('"');
                         _digestInfo["nonce"] = _digestInfo["nonce"].Trim('"');
-                        
                         SendNextRequest(_digestInfo);
+                       
                         return;
                     }
                 }
-                
-                Cleanup("rtsp_error", response.Status);
-                return;
+                if (_status != OPTIONS)
+                {
+                    Cleanup("rtsp_error", response.Status);
+                    return;
+                }
             }
 
             if (_callback != null)
@@ -408,13 +420,26 @@ namespace AirTunesSharp.Network
             switch (_status)
             {
                 case HEARTBEAT:
-                    _status = PLAYING;
+                    if (_status != SETDAAP && _status != SETART)
+                        _status = PLAYING;
                 break;
                 case OPTIONS:
                     if(response.Headers.ContainsKey("Apple-Response"))
                         _requireEncryption = true;
-                    _status = ANNOUNCE;
-                    break;             
+                    if (response.Code == 401) {
+                        _passwordTried = false;
+                        _status = OPTIONS2;
+                    } else {
+                        _status = ANNOUNCE;
+                    }
+                    break;  
+                case OPTIONS2:
+                    // if (response.Code == 401) {
+                    //     _status = AUTH_SETUP;
+                    // } else {
+                        _status = ANNOUNCE;
+                    // }
+                    break;           
                 case ANNOUNCE:
                     _status = SETUP;
                     break;
@@ -458,14 +483,22 @@ namespace AirTunesSharp.Network
                     break;
                     
                 case RECORD:
-                    _status = PLAYING;
+                    if (_status != SETDAAP && _status != SETART && _status != SETVOLUME)
+                        _status = PLAYING;
                     Emit("ready");
                     break;
                     
                 case SETVOLUME:
+                    if (_status != SETDAAP && _status != SETART)
+                        _status = PLAYING;
+                    break;
                 case SETDAAP:
+                    if (_status != SETVOLUME && _status != SETART)
+                        _status = PLAYING;
+                    break;
                 case SETART:
-                    _status = PLAYING;
+                    if (_status != SETVOLUME && _status != SETDAAP)
+                        _status = PLAYING;
                     break;
                     
                 case TEARDOWN:
@@ -512,7 +545,7 @@ namespace AirTunesSharp.Network
         /// <param name="uri">Request URI</param>
         /// <param name="digestInfo">Optional digest authentication info</param>
         /// <returns>RTSP header string</returns>
-        private string MakeHead(string method, string uri, Dictionary<string, string>? digestInfo = null)
+        private string MakeHead(string method, string uri, Dictionary<string, string>? digestInfo = null, bool md5Uppercase = true)
         {
             string head = $"{method} {uri} RTSP/1.0\r\n" +
                 $"CSeq: {NextCSeq()}\r\n" +
@@ -531,9 +564,9 @@ namespace AirTunesSharp.Network
                 string password = digestInfo["password"];
                 string nonce = digestInfo["nonce"];
                 
-                string ha1 = Md5($"{username}:{realm}:{password}");
-                string ha2 = Md5($"{method}:{uri}");
-                string diResponse = Md5($"{ha1}:{nonce}:{ha2}");
+                string ha1 = Md5($"{username}:{realm}:{password}", md5Uppercase);
+                string ha2 = Md5($"{method}:{uri}", md5Uppercase);
+                string diResponse = Md5($"{ha1}:{nonce}:{ha2}", md5Uppercase);
 
                 head += $"Authorization: Digest " +
                     $"username=\"{username}\", " +
@@ -631,16 +664,19 @@ namespace AirTunesSharp.Network
         /// Sends the next RTSP request based on current status
         /// </summary>
         /// <param name="digestInfo">Optional digest authentication info</param>
-        private void SendNextRequest(Dictionary<string, string>? digestInfo = null)
+        private void SendNextRequest(Dictionary<string, string>? digestInfo = null, int? forcedStatus = null)
         {
             string request = "";
             string body_str = "";
             byte[] body = [];
+
+            if (forcedStatus != null)
+                _status = forcedStatus.Value ;
             
             
             Console.WriteLine($"Sending request: {_status}");
 
-            switch (_status)
+            switch (forcedStatus ?? _status)
             {
                 //  case PAIR_PIN_START:
                 //     I = "366B4165DD64AD3A";
@@ -888,7 +924,10 @@ namespace AirTunesSharp.Network
                     request += MakeHead("OPTIONS", "*", digestInfo);
                     request += "Apple-Challenge: SdX9kFJVxgKVMFof/Znj4Q\r\n\r\n";
                     break;
-
+                case OPTIONS2:
+                    request += MakeHead("OPTIONS", "*", digestInfo, false);
+                    request += "Apple-Challenge: SdX9kFJVxgKVMFof/Znj4Q\r\n\r\n";
+                    break;
                 case ANNOUNCE:
                     _announceId = NumUtil.RandomInt(8).ToString();
                     
@@ -914,7 +953,7 @@ namespace AirTunesSharp.Network
                             $"a=aesiv:{Config.IvBase64}\r\n";
                     }
 
-                    body = Encoding.ASCII.GetBytes(body_str);
+                    body = Encoding.UTF8.GetBytes(body_str);
 
                     request += MakeHeadWithURL("ANNOUNCE", digestInfo);
                     request +=
@@ -947,7 +986,7 @@ namespace AirTunesSharp.Network
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += "Content-Type: text/parameters\r\n";
                     body_str = $"volume: {attenuation :F6}\r\n";
-                    body = Encoding.ASCII.GetBytes(body_str);
+                    body = Encoding.UTF8.GetBytes(body_str);
                     request += $"Content-Length: {body.Length}\r\n\r\n";
                     break;
 
@@ -972,9 +1011,6 @@ namespace AirTunesSharp.Network
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += "Content-Type: application/x-dmap-tagged\r\n";
                     
-                    
-                    // Create DAAP body - this would need a proper DAAP implementation
-                    // For now, we'll use a placeholder
                     body = daapInfo;
 
                     
@@ -996,7 +1032,7 @@ namespace AirTunesSharp.Network
             {
                 try
                 {
-                    byte[] requestBytes = Encoding.ASCII.GetBytes(request).Concat(body).ToArray();
+                    byte[] requestBytes = Encoding.UTF8.GetBytes(request).Concat(body).ToArray();
                     NetworkStream stream = _socket.GetStream();
                     stream.Write(requestBytes, 0, requestBytes.Length);
                     StartTimeout();
@@ -1007,15 +1043,15 @@ namespace AirTunesSharp.Network
                 }
             }
 
-            Console.WriteLine($"Sending request: {request} {Encoding.ASCII.GetString(body)}");
+            Console.WriteLine($"Sending request: {request} {Encoding.UTF8.GetString(body)}");
         }
 
         /// <summary>
         /// Calculates MD5 hash of a string
         /// </summary>
         /// <param name="input">Input string</param>
-        /// <returns>MD5 hash as uppercase hex string</returns>
-        private string Md5(string input)
+        /// <returns>MD5 hash as uppercase hex string or lowercase</returns>
+        private string Md5(string input, bool uppercase = true)
         {
             using (MD5 md5 = MD5.Create())
             {
@@ -1025,7 +1061,10 @@ namespace AirTunesSharp.Network
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < hashBytes.Length; i++)
                 {
-                    sb.Append(hashBytes[i].ToString("X2"));
+                    if (uppercase)
+                        sb.Append(hashBytes[i].ToString("X2"));
+                    else
+                        sb.Append(hashBytes[i].ToString("x2"));
                 }
                 return sb.ToString();
             }
