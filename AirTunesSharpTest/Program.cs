@@ -111,7 +111,7 @@ namespace AirTunesSharpTest
                 // Check if device requires password
                 string password = null;
                 deviceOptions["password"] = null;
-                if (deviceOptions != null && (deviceOptions["needPassword"] || deviceOptions["needPin"] ))
+                if (deviceOptions != null && (deviceOptions["needPassword"] == true && deviceOptions["needPin"] == false))
                 {
                     Console.WriteLine("Device requires password, enter password: (Default is 3939)");
                     deviceOptions["password"] = Console.ReadLine();

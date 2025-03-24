@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using Tmds.MDns;
 using AirTunesSharp.Devices;
+using System.Numerics;
 
 namespace AirTunesSharp.Utils
 {
@@ -145,14 +146,17 @@ namespace AirTunesSharp.Utils
                 var hex_p2 = "";
 
                 hex_p1 = hex.Split(",")[0];
-                hex_p2 = hex.Contains(',') ? hex.Split(',')[1] : "";
+                hex_p2 = hex.Contains(',') ? hex.Split(',')[1] : "0x";
+                var new_hex = hex_p2 + hex_p1.Substring(2);
+                Console.WriteLine("new_hex: " + new_hex);
+                // var binary1 = BigInteger.Parse(new_hex, System.Globalization.NumberStyles.HexNumber);
 
-                var binary1 = Convert.ToString(Convert.ToInt32(hex_p1, 16), 2);
-                var binary_set1 = binary1.ToCharArray().Select(x => x.ToString()).ToArray();
-                var binary2 = Convert.ToString(Convert.ToInt32(hex_p2, 16), 2);
-                var binary_set2 = binary2.ToCharArray().Select(x => x.ToString()).ToArray();
+                // var binary_set1 = binary1.ToCharArray().Select(x => x.ToString()).ToArray();
+                // var binary2 = Convert.ToString(Convert.ToInt32(hex_p2, 16), 2);
+                // var binary_set2 = binary2.ToCharArray().Select(x => x.ToString()).ToArray();
                 
-                features = binary_set1.Concat(binary_set2).ToArray();
+                features = Convert.ToString(Convert.ToInt64(new_hex, 16), 2).ToCharArray().Select(x => x.ToString()).ToArray();
+                
                 if (features.Length > 48)
                 { transient = (features[features.Length - 1 - 48] == "1");}
             }
@@ -168,7 +172,7 @@ namespace AirTunesSharp.Utils
                 // Debug.WriteLine("needPss", PasswordRequired, PinRequired, OneTimePairingRequired);
                 needPassword = (PasswordRequired || PinRequired || OneTimePairingRequired);
                 needPin = (PinRequired || OneTimePairingRequired);
-                transient = (!(PasswordRequired || PinRequired || OneTimePairingRequired));
+                // transient = (!(PasswordRequired || PinRequired || OneTimePairingRequired));
                 // Debug.WriteLine("needPss", needPassword);
             }
 

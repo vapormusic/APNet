@@ -257,6 +257,14 @@ namespace AirTunesSharp.Devices
         }
 
         /// <summary>
+        /// Sets the passcode for the device
+        /// </summary>
+        /// <param name="password">Passcode</param>
+        public void SetPasscode(string password) {
+            _rtsp.SetPasscode(password);
+        }
+
+        /// <summary>
         /// Creates an AirTunes packet from a PCM packet
         /// </summary>
         /// <param name="packet">PCM packet</param>

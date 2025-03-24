@@ -153,6 +153,23 @@ namespace AirTunesSharp.Devices
         }
 
         /// <summary>
+        /// Set password for a device
+        /// </summary>
+        /// <param name="key">Device key</param>
+        /// <param name="password">Password</param>
+        /// <returns></returns>
+        public void SetPasscode(string key, string passcode)
+        {
+            if (!_devices.TryGetValue(key, out var dev))
+            {
+                Emit("status", key, "error", "not_found");
+                return;
+            }
+
+            dev.SetPasscode(passcode);
+        } 
+
+        /// <summary>
         /// Stops all devices
         /// </summary>
         /// <param name="allCb">Callback function</param>
@@ -211,4 +228,8 @@ namespace AirTunesSharp.Devices
             _hasAirTunes = newHasAirTunes;
         }
     }
+
+
+    
+
 }

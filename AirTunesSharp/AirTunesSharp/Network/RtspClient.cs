@@ -499,6 +499,12 @@ namespace AirTunesSharp.Network
             SendNextRequest(null, SETDAAP);
         }
 
+        public void SetPasscode(string passcode) {
+        _password = passcode;
+        _status = this.airplay2 ? PAIR_SETUP_1 : PAIR_PIN_SETUP_1;
+        SendNextRequest();
+        }
+
         /// <summary>
         /// Sets artwork for the current track
         /// </summary>
