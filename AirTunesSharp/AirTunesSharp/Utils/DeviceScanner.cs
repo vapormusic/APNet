@@ -62,28 +62,47 @@ namespace AirTunesSharp.Utils
 
         private void onServiceChanged(object sender, ServiceAnnouncementEventArgs e)
         {
-        //    printService('~', e.Announcement);
+            //  printService('~', e.Announcement);
+            // devices.RemoveAll(x => x["key"] == e.Announcement.Addresses[0].ToString() + ":" + e.Announcement.Port.ToString());
+            // devices.Add(new Dictionary<String, dynamic>()
+            //     {
+            //         { "key" , e.Announcement.Addresses[0].ToString()+ ":" + e.Announcement.Port.ToString() },
+            //         { "name", e.Announcement.Instance },
+            //         { "host", e.Announcement.Addresses[0].ToString() },
+            //         { "port", e.Announcement.Port.ToString() },
+            //         { "txt", e.Announcement.Txt },
+            //         { "type", e.Announcement.Type },
+            //         { "interface", e.Announcement.NetworkInterface.Name },
+            //         { "options", parseTxt(e.Announcement.Txt.ToArray(), e.Announcement.Type == "_airplay._tcp" ) }
+            // });
         }
 
         private void onServiceRemoved(object sender, ServiceAnnouncementEventArgs e)
         {
             // printService('-', e.Announcement);
+            // devices.RemoveAll(x => x["key"] == e.Announcement.Addresses[0].ToString() + ":" + e.Announcement.Port.ToString());
         }
 
         private void onServiceAdded(object sender, ServiceAnnouncementEventArgs e)
         {
             // printService('+', e.Announcement);
-            devices.Add(new Dictionary<String, dynamic>()
+            // check if device already exists in list
+            string key = e.Announcement.Addresses[0].ToString() + ":" + e.Announcement.Port.ToString();
+            if (!devices.Exists(x => ((Dictionary<String, dynamic>)x).GetValueOrDefault("key", "") == key))
             {
-                { "key" , e.Announcement.Addresses[0].ToString()+ ":" + e.Announcement.Port.ToString() },
-                { "name", e.Announcement.Instance },
-                { "host", e.Announcement.Addresses[0].ToString() },
-                { "port", e.Announcement.Port.ToString() },
-                { "txt", e.Announcement.Txt },
-                { "type", e.Announcement.Type },
-                { "interface", e.Announcement.NetworkInterface.Name },
-                { "options", parseTxt(e.Announcement.Txt.ToArray(), e.Announcement.Type == "_airplay._tcp" ) }
-            });
+                devices = devices.Append(new Dictionary<String, dynamic>()
+                {
+                    { "key" , key },
+                    { "name", e.Announcement.Instance },
+                    { "host", e.Announcement.Addresses[0].ToString() },
+                    { "port", e.Announcement.Port.ToString() },
+                    { "txt", e.Announcement.Txt },
+                    { "type", e.Announcement.Type },
+                    { "interface", e.Announcement.NetworkInterface.Name },
+                    { "options", parseTxt(e.Announcement.Txt.ToArray(), e.Announcement.Type == "_airplay._tcp" ) }
+                }).ToList();
+            }
+            
         }
 
         static void printService(char startChar, ServiceAnnouncement service)
@@ -131,7 +150,7 @@ namespace AirTunesSharp.Utils
 
             needPassword = false;
             needPin = false;
-            Console.WriteLine("txt: " + txt.ToString());
+            // Console.WriteLine("txt: " + txt.ToString());
 
 
 
@@ -148,7 +167,7 @@ namespace AirTunesSharp.Utils
                 hex_p1 = hex.Split(",")[0];
                 hex_p2 = hex.Contains(',') ? hex.Split(',')[1] : "0x";
                 var new_hex = hex_p2 + hex_p1.Substring(2);
-                Console.WriteLine("new_hex: " + new_hex);
+                // Console.WriteLine("new_hex: " + new_hex);
                 // var binary1 = BigInteger.Parse(new_hex, System.Globalization.NumberStyles.HexNumber);
 
                 // var binary_set1 = binary1.ToCharArray().Select(x => x.ToString()).ToArray();
@@ -197,11 +216,13 @@ namespace AirTunesSharp.Utils
 
             // Filter for records starting with "manufacturer="
             var manufacturer = txt.Where(u => u.StartsWith("manufacturer=")).ToList();
+            bool isSonos = false;
             string firstManufacturer = manufacturer.FirstOrDefault() ?? "";
             if (firstManufacturer.Contains("Sonos"))
             {
                 mode = 2;
                 needPin = true;
+                isSonos = true;
             }
 
             var pw_raop = txt.Where(u => u.StartsWith("pw=")).ToList();
@@ -212,12 +233,12 @@ namespace AirTunesSharp.Utils
             }
          
   
-            Console.WriteLine("needPin: " + needPin.ToString());
-            Console.WriteLine("needPassword: " + needPassword.ToString());
-            Console.WriteLine("mode-atv: " + mode.ToString());
-            Console.WriteLine("alacEncoding: " + alacEncoding.ToString());
-            // Console.WriteLine("AP2: " + options.airplay2.ToString());
-            Console.WriteLine("transient: " + transient.ToString());
+            // Console.WriteLine("needPin: " + needPin.ToString());
+            // Console.WriteLine("needPassword: " + needPassword.ToString());
+            // Console.WriteLine("mode-atv: " + mode.ToString());
+            // Console.WriteLine("alacEncoding: " + alacEncoding.ToString());
+            // // Console.WriteLine("AP2: " + options.airplay2.ToString());
+            // Console.WriteLine("transient: " + transient.ToString());
 
             // var APOptions = new AirTunesOptions();
             // APOptions.alacEncoding = alacEncoding;
@@ -238,6 +259,7 @@ namespace AirTunesSharp.Utils
                 { "transient", transient },
                 { "features", features },
                 { "statusflags", statusflags },
+                { "isSonos", isSonos },
                 { "airplay2", airplay2 },
                 { "debug", true },
                 { "txt", txt }

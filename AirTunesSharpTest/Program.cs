@@ -58,7 +58,7 @@ namespace AirTunesSharpTest
                     Console.WriteLine($"Buffer event: {eventArgs[0]}");
                 });
 
-                airTunes.On("drain", (eventArgs) =>
+                airTunes.On("drain", async (eventArgs) =>
                 {
                     // Write more audio data
                     Console.WriteLine("Writing more audio data...");
@@ -68,6 +68,7 @@ namespace AirTunesSharpTest
                     if (idx >= audioData.Length / (352 * 4))
                     {
                         Console.WriteLine("End of audio data reached, ending stream...");
+                        await Task.Delay(10000); // to be fair 2205 ms should be enough
                         airTunes.End();
                         running = false;
                     }
@@ -81,10 +82,11 @@ namespace AirTunesSharpTest
 
                 Console.WriteLine("Event handlers registered");
                 Console.WriteLine("------------------------------");
-                Console.WriteLine("Scanning for devices...");
+                Console.WriteLine("Scanning for devices... (for 5 seconds)");
                 var deviceScanner = new AirTunesSharp.Utils.DeviceScanner();
                 deviceScanner.StartScanning();
-                Console.ReadLine();
+                // Console.ReadLine();
+                await Task.Delay(5000);
                 deviceScanner.StopScanning();
                 Console.WriteLine("Scanning complete");
                 var devices = deviceScanner.GetAirPlayDevices();
@@ -114,9 +116,16 @@ namespace AirTunesSharpTest
 
                 // Get TXT records for the device 
                 Console.WriteLine("Discovering TXT records for the device...");
+                try{
+                    var _ = devices.Find(d => d["host"] == deviceIp.Trim())["txt"];
+                } catch (Exception _){
+                    Console.WriteLine($"Error: Not found device with IP {deviceIp}, using first device found");
+                    deviceIp = devices[0]["host"];
+                }
 
                 var txtRecords = devices.Find(d => d["host"] == deviceIp.Trim())["txt"];
                 var deviceOptions = devices.Find(d => d["host"] == deviceIp.Trim())["options"];
+                var isSonos = deviceOptions["isSonos"];
                 Console.WriteLine($"Device options: {string.Join(",", deviceOptions)}");
 
                 // Check if device requires password
@@ -124,13 +133,12 @@ namespace AirTunesSharpTest
                 deviceOptions["password"] = null;
                 if (deviceOptions != null && (deviceOptions["needPassword"] == true && deviceOptions["needPin"] == false))
                 {
-                    Console.WriteLine("Device requires password, enter password: (Default is 3939)");
+                    Console.WriteLine("Device requires password, enter password:");
                     deviceOptions["password"] = Console.ReadLine();
-                    if (string.IsNullOrEmpty(deviceOptions["password"]))
+                    if (string.IsNullOrEmpty(deviceOptions["password"]) && deviceOptions["transient"] == true)
                     {
                         deviceOptions["password"] = "3939";
-                    }
-                    
+                    }                    
                 }
 
                 Console.WriteLine($"Device volume: (Default is 20)");
@@ -172,6 +180,15 @@ namespace AirTunesSharpTest
                         Console.WriteLine("Volume set successfully");
                     }));
 
+                    // Set Progress
+                    // Console.WriteLine("Do it before playing , especially for Sonos devices cus they are a bich");
+                    // Set duration to 999999999 to make it infinite, AP receiver device will stop if duration is reached.
+                    if (isSonos)
+                    airTunes.SetProgress(device.Key, (0), 999999999, (Action<object[]>)((args) =>
+                    {
+                        Console.WriteLine("Progress set successfully");
+                    }));
+
 
                     await Task.Delay(1000);
 
@@ -199,6 +216,8 @@ namespace AirTunesSharpTest
                     {
                         Console.WriteLine("Artwork set successfully");
                     }));
+
+                    
 
                     await Task.Delay(1000);
 

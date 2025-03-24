@@ -32,7 +32,7 @@ namespace AirTunesSharp.Devices
         private int _controlPort;
         private int _timingPort;
 
-        private Credentials _credentials;
+        private Credentials? _credentials;
         private bool _isAirPlay2 = false;
 
         /// <summary>
@@ -122,7 +122,8 @@ namespace AirTunesSharp.Devices
                 _serverPort = setup.server_port;
                 _controlPort = setup.control_port;
                 _timingPort = setup.timing_port;
-                _credentials = setup.credentials;
+                if (setup.credentials != null)
+                    _credentials = setup.credentials;
                 Console.WriteLine($"Server port: {_serverPort}, Control port: {_controlPort}, Timing port: {_timingPort}");
                 // _udpServers.Close();
                 
@@ -244,6 +245,19 @@ namespace AirTunesSharp.Devices
         {
             _rtsp.SetTrackInfo(name, artist, album, callback);
         }
+
+        /// <summary>
+        /// Sets the progress for a device
+        /// </summary>
+        /// <param name="deviceKey">Device key</param>
+        /// <param name="progress">Progress</param>
+        /// <param name="duration">Duration</param>
+        /// <param name="callback">Callback function</param>
+        public void SetProgress(long progress, long duration, Action<object[]> callback)
+        {
+            _rtsp.SetProgress(progress, duration, callback);
+        }
+
 
         /// <summary>
         /// Sets artwork for the current track

@@ -35,3 +35,5 @@ C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Release\net8.0\refint\A
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Release\net8.0\AirTunesSharpTest.pdb
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Release\net8.0\AirTunesSharpTest.genruntimeconfig.cache
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\obj\Release\net8.0\ref\AirTunesSharpTest.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\plist-cil.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\srp.dll

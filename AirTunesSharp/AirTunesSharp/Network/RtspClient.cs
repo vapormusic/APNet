@@ -73,6 +73,8 @@ namespace AirTunesSharp.Network
         private TrackInfo? _trackInfo;
         private byte[]? _artwork;
         private string? _artworkContentType;
+        private long? progress;
+        private long? duration;
         private Action<object[]>? _callback;
         private int? _controlPort;
         private int? _timingPort;
@@ -84,6 +86,8 @@ namespace AirTunesSharp.Network
         private Dictionary<string, string>? _digestInfo;
 
         private bool _triedMd5Uppercase = false;
+
+        private long starttime;
 
         private string I = "366B4165DD64AD3A";
         private string P;
@@ -198,6 +202,9 @@ namespace AirTunesSharp.Network
             encryptedChannel = false;
             hostip = null;
             homekitver = (transient == true) ? "4" : "3";
+            starttime = 0;
+            progress = 0;
+            duration = 0;
 
         }
 
@@ -228,13 +235,12 @@ namespace AirTunesSharp.Network
                         return;
                     }
 
-                    if (needPassword == true)
+                    if (needPassword || needPin)
                     {
-                        Debug.WriteLine("s1");
                         _status = PAIR_PIN_START;
-                        ClearTimeout();
                         SendNextRequest();
                         StartHeartBeat();
+                        ClearTimeout();
                     }
                     else
                     {
@@ -256,6 +262,8 @@ namespace AirTunesSharp.Network
                             SendNextRequest();
                             StartHeartBeat();
                         }
+
+                        ClearTimeout();
 
 
                     }
@@ -287,16 +295,19 @@ namespace AirTunesSharp.Network
                                     } while (lastRead > buffer.Length);
                                     encryptedBlob = ms.ToArray();
                                     int[] x = (new int[] { PAIR_SETUP_1, PAIR_SETUP_2, PAIR_SETUP_3, PAIR_VERIFY_HAP_1, PAIR_VERIFY_HAP_2 });
-                                    if (Encoding.UTF8.GetString(encryptedBlob) == "")
-                                    {
-                                        Cleanup("done");
-                                    }
+                                    // if (Encoding.UTF8.GetString(encryptedBlob) == "")
+                                    // {
+                                    //     Cleanup("done");
+                                    // }
                                     if (this.encryptedChannel && this.credentials != null)
                                     {
                                         decrpytedData = this.credentials.decrypt(encryptedBlob);
                                     } else {
                                         decrpytedData = encryptedBlob;
                                     }
+                                    lastRead = 0;
+                                    buffer = new byte[81920];
+                                    ClearTimeout();
 
                                     string data = Encoding.UTF8.GetString(decrpytedData, 0, decrpytedData.Length);
                                     blob.Append(data);
@@ -313,6 +324,7 @@ namespace AirTunesSharp.Network
                                     Debug.WriteLine(Encoding.UTF8.GetString(decrpytedData));
                                     ProcessData(response,decrpytedData);
                                     blob.Clear();
+
                                     if (endIndex < data.Length)
                                         blob.Append(data.Substring(endIndex));
                                     decrpytedData = new byte[0];
@@ -396,6 +408,11 @@ namespace AirTunesSharp.Network
         /// </summary>
         private void StartTimeout()
         {
+            if (_timeout != null)
+            {
+                _timeout.Stop();
+                _timeout.Dispose();
+            } 
             _timeout = new System.Timers.Timer(Config.RtspTimeout);
             _timeout.Elapsed += (sender, e) => Cleanup("timeout");
             _timeout.AutoReset = false;
@@ -487,6 +504,10 @@ namespace AirTunesSharp.Network
             {
                return;         
             }
+            if (name != _trackInfo?.Name || artist != _trackInfo?.Artist || album != _trackInfo?.Album)
+            {
+                this.starttime = _audioOut.LastSeq * 352 + 2 * 44100;
+            }
 
             _trackInfo = new TrackInfo
             {
@@ -494,15 +515,41 @@ namespace AirTunesSharp.Network
                 Artist = artist,
                 Album = album
             };
+
             _status = SETDAAP;
             _callback = callback;
             SendNextRequest(null, SETDAAP);
         }
 
+        /// <summary>
+        /// Sets duration and progress for the current track
+        /// </summary>
+        /// <param name="progress">Progress in seconds</param>
+        /// <param name="duration">Duration in seconds</param>
+        /// <param name="callback">Callback function</param>
+        public void SetProgress(long progress, long duration, Action<object[]> callback)
+        {
+            if ((_status < 2) || ((_status > 10) && (_status < 26))  )
+            {
+               return;         
+            }
+            this.progress = progress;
+            this.duration = duration;
+            _callback = callback;
+            _status = SETPROGRESS;
+            SendNextRequest();
+        } 
+
+
+
+        /// <summary>
+        /// Sets the passcode for pairing
+        /// </summary>
+        /// <param name="passcode">Passcode</param>
         public void SetPasscode(string passcode) {
-        _password = passcode;
-        _status = this.airplay2 ? PAIR_SETUP_1 : PAIR_PIN_SETUP_1;
-        SendNextRequest();
+            _password = passcode;
+            _status = this.airplay2 ? PAIR_SETUP_1 : (this.needPin ? PAIR_PIN_SETUP_1 : OPTIONS);
+            SendNextRequest();
         }
 
         /// <summary>
@@ -602,7 +649,7 @@ namespace AirTunesSharp.Network
 
             if (response.Code >= 400 & response.Code != 416)
             {
-                if (response.Code == 401 && !_passwordTried && _password != null)
+                if (response.Code == 401 && !_passwordTried && (_password != null && _password.Length > 0))
                 {
                     _passwordTried = true;
                     
@@ -623,10 +670,47 @@ namespace AirTunesSharp.Network
                         return;
                     }
                 }
-                if (_status != OPTIONS)
+                if (response.Code == 401 && !(_password != null && _password.Length > 0) && !transient && _status == OPTIONS)
                 {
-                    Cleanup("rtsp_error", response.Status);
+                    Emit("need_password");
+                    _passwordTried = false;
                     return;
+                }
+                // if (_status != OPTIONS)
+                // {
+                //     Cleanup("rtsp_error", response.Status);
+                //     return;
+                // }
+                if(response.Code == 403 && _status == ANNOUNCE && this.mode == 2) {
+                        _status = AUTH_SETUP;
+                        SendNextRequest();
+                        return;
+                }
+
+                if (response.Code == 453)
+                {
+                    Debug.WriteLine("busy");
+                    Cleanup("busy", "Device is busy");
+                    return;
+                }
+
+                if (response.Code != 200)
+                {
+                    if (_status != SETVOLUME && _status != SETPEERS && _status != FLUSH && _status != RECORD && _status != GETVOLUME && _status != SETPROGRESS && _status != SETDAAP && _status != SETART)
+                    {
+                        if ((new int[] {PAIR_VERIFY_1,
+                              PAIR_VERIFY_2,
+                              AUTH_SETUP,
+                              PAIR_PIN_START,
+                              PAIR_PIN_SETUP_1,
+                              PAIR_PIN_SETUP_2,
+                              PAIR_PIN_SETUP_3}).Contains(_status))
+                        {
+                            Emit("pair_failed", "");
+                        }
+                        Cleanup("rtsp_error", response.Status);
+                        return;
+                    }
                 }
             }
 
@@ -640,9 +724,9 @@ namespace AirTunesSharp.Network
             switch (_status)
             {
                 case PAIR_PIN_START:
-                    if (!this.transient) { 
+                    if (!this.transient && _password == null) { 
                         Emit("need_password");
-                     }
+                    }
                     _status = airplay2 ? PAIR_SETUP_1 : PAIR_PIN_SETUP_1;
                     break;
                 case PAIR_PIN_SETUP_1:
@@ -959,27 +1043,31 @@ namespace AirTunesSharp.Network
                         requireEncryption = _requireEncryption,
                         server_port = _serverPort,
                         control_port = _controlPort,
-                        timing_port = _timingPort
+                        timing_port = _timingPort,
+                        credentials = credentials,
                     });
                     _status = RECORD;
                     break;
                     
                 case RECORD:
-                    if (_status != SETDAAP && _status != SETART && _status != SETVOLUME)
+                    if (_status != SETDAAP && _status != SETART && _status != SETVOLUME && _status != SETPROGRESS)
                         _status = PLAYING;
                     Emit("ready");
                     break;
-                    
+                case SETPROGRESS:
+                    if (_status != SETDAAP && _status != SETART && _status != SETVOLUME)
+                        _status = PLAYING;
+                    break;    
                 case SETVOLUME:
-                    if (_status != SETDAAP && _status != SETART)
+                    if (_status != SETDAAP && _status != SETART && _status != SETPROGRESS)
                         _status = PLAYING;
                     break;
                 case SETDAAP:
-                    if (_status != SETVOLUME && _status != SETART)
+                    if (_status != SETVOLUME && _status != SETART && _status != SETPROGRESS)
                         _status = PLAYING;
                     break;
                 case SETART:
-                    if (_status != SETVOLUME && _status != SETDAAP)
+                    if (_status != SETVOLUME && _status != SETDAAP && _status != SETPROGRESS)
                         _status = PLAYING;
                     break;
                     
@@ -1194,8 +1282,13 @@ namespace AirTunesSharp.Network
                         
                     } else
                     {
-                        Emit("need_password");
-                        _status = airplay2 ? INFO : PAIR_PIN_SETUP_1;
+                        if (_password == null)
+                        {
+                            Emit("need_password");
+                        }
+                        _status = airplay2 ? INFO : (needPin ? PAIR_PIN_SETUP_1: OPTIONS);
+                        SendNextRequest();
+                        return;
                     }
                     break;
                 case PAIR_PIN_SETUP_1:
@@ -1603,7 +1696,19 @@ namespace AirTunesSharp.Network
                     request += MakeHeadWithURL("TEARDOWN", digestInfo);
                     request += "\r\n";
                     break;
-
+                case SETPROGRESS:
+                    string hms(int seconds) {
+                        return TimeSpan.FromSeconds(seconds).ToString(@"hh\:mm\:ss");
+                    }
+                    long position = (long)(this.starttime + (this.progress) * (int)(Math.Floor((2 * 44100) / (352 / 125) / 0.71)));
+                    long duration = (long)(this.starttime + (this.duration) * (int)(Math.Floor((2 * 44100) / (352 / 125) / 0.71)));
+                    string body3 = "progress: " + this.starttime.ToString() + "/" + position.ToString() + "/" + duration.ToString() + "\r\n";
+                    request = MakeHeadWithURL("SET_PARAMETER", digestInfo);
+                    request +=
+                              "Content-Type: text/parameters\r\n" +
+                              "Content-Length: " + body3.Length + "\r\n\r\n";
+                    request += body3;
+                    break;
                 case SETDAAP:
                     if (_trackInfo == null)
                         return;
@@ -1656,7 +1761,8 @@ namespace AirTunesSharp.Network
                 }
             }
 
-            Console.WriteLine($"Sending request: {request} {Encoding.UTF8.GetString(body)}");
+            var printed_body = (_status == SETART) ? "" : Encoding.UTF8.GetString(body);
+            Console.WriteLine($"Sending request: {request} {printed_body}");
         }
 
         /// <summary>

@@ -90,6 +90,10 @@ namespace AirTunesSharp.Devices
                 {
                     Emit("need_sync");
                 }
+
+                var argu = new object[] { dev.Key, status, arg };
+
+                Emit("status", dev.Key, status);
             });
 
             dev.Start();
@@ -132,6 +136,24 @@ namespace AirTunesSharp.Devices
             }
 
             dev.SetTrackInfo(name, artist, album, callback);
+        }
+
+        /// <summary>
+        /// Sets the progress for a device
+        /// </summary>
+        /// <param name="deviceKey">Device key</param>
+        /// <param name="progress">Progress</param>
+        /// <param name="duration">Duration</param>
+        /// <param name="callback">Callback function</param>
+        public void SetProgress(string key, long progress, long duration, Action<object[]> callback)
+        {   
+            if (!_devices.TryGetValue(key, out var dev))
+            {
+                Emit("status", key, "error", "not_found");
+                return;
+            }
+
+            dev.SetProgress(progress, duration, callback);
         }
 
         /// <summary>

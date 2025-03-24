@@ -105,6 +105,18 @@ namespace AirTunesSharp
         }
 
         /// <summary>
+        /// Sets the progress for a device
+        /// </summary>
+        /// <param name="deviceKey">Device key</param>
+        /// <param name="progress">Progress</param>
+        /// <param name="duration">Duration</param>
+        /// <param name="callback">Callback function</param>
+        public void SetProgress(string deviceKey, long progress, long duration, Action<object[]> callback)
+        {
+            _devices.SetProgress(deviceKey, progress, duration, callback);
+        }
+
+        /// <summary>
         /// Resets the circular buffer
         /// </summary>
         public void Reset()

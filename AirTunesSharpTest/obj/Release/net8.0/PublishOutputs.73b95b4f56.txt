@@ -12,11 +12,13 @@ C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\Makaretu.Dns.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\Makaretu.Dns.Multicast.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\NaCl.Core.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\plist-cil.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\Rebex.Common.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\Rebex.Curve25519.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\Rebex.Ed25519.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\Rebex.Security.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\SimpleBase.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\srp.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\Tmds.MDns.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\runtimes\linux-arm\lib\netstandard2.0\Tmds.LibC.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Release\net8.0\publish\runtimes\linux-arm64\lib\netstandard2.0\Tmds.LibC.dll
