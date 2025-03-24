@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AirTunesSharp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aa2e6a4a8b28a733cfe5851af80d14a7b578853f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b091ea3762bc2e0ea6a3d232a49d6f45a1db47c")]
 [assembly: System.Reflection.AssemblyProductAttribute("AirTunesSharp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AirTunesSharp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

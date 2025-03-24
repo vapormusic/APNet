@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Security.Policy;
 using AirTunesSharp.Network;
 using AirTunesSharp.Utils;
+using AirTunesSharp.Utils.HomeKit;
 
 namespace AirTunesSharp.Devices
 {
@@ -30,6 +31,9 @@ namespace AirTunesSharp.Devices
         private int _serverPort;
         private int _controlPort;
         private int _timingPort;
+
+        private Credentials _credentials;
+        private bool _isAirPlay2 = false;
 
         /// <summary>
         /// Gets the type of the device
@@ -73,7 +77,7 @@ namespace AirTunesSharp.Devices
             Console.WriteLine($"Adding AirTunes device at {options}");
             _port = options.port ?? 5000;
             Key = $"{_host}:{_port}";
-            _rtsp = new RtspClient(options.volume ?? 50, options.password ?? null, audioOut);
+            _rtsp = new RtspClient(options.volume ?? 50, options.password ?? null, audioOut, options);
             _audioCallback = null;
         }
 
@@ -118,7 +122,10 @@ namespace AirTunesSharp.Devices
                 _serverPort = setup.server_port;
                 _controlPort = setup.control_port;
                 _timingPort = setup.timing_port;
+                _credentials = setup.credentials;
                 Console.WriteLine($"Server port: {_serverPort}, Control port: {_controlPort}, Timing port: {_timingPort}");
+                // _udpServers.Close();
+                
             });
 
             _rtsp.On("ready", args =>
@@ -139,6 +146,11 @@ namespace AirTunesSharp.Devices
                 Emit("status","need_password");
             });
 
+           _rtsp.On("pair_success", args => {
+                Emit("status","pair_success");
+            });
+
+
             _rtsp.StartHandshake(_udpServers, _host, _port);
         }
 
@@ -154,7 +166,7 @@ namespace AirTunesSharp.Devices
             {
                 // Console.WriteLine("Relaying audio packet");
                 Audio.Packet packet = (Audio.Packet)args[0];
-                byte[] airTunes = MakeAirTunesPacket(packet, _requireEncryption);
+                byte[] airTunes = MakeAirTunesPacket(packet, _requireEncryption, _credentials);
                 _audioSocket.Send(airTunes, airTunes.Length, new IPEndPoint(IPAddress.Parse(_host), _serverPort));
             };
 
@@ -250,7 +262,7 @@ namespace AirTunesSharp.Devices
         /// <param name="packet">PCM packet</param>
         /// <param name="requireEncryption">Whether encryption is required</param>
         /// <returns>AirTunes packet</returns>
-        private byte[] MakeAirTunesPacket(Audio.Packet packet, bool requireEncryption)
+        private byte[] MakeAirTunesPacket(Audio.Packet packet, bool requireEncryption, Credentials? credentials = null)
         {
             byte[] alac = PcmToALAC(packet.Pcm);
             string md5 = NumUtil.ComputeMD5(alac);
@@ -259,16 +271,21 @@ namespace AirTunesSharp.Devices
             byte[] airTunes = new byte[alac.Length + RTP_HEADER_SIZE];
             byte[] header = MakeRTPHeader(packet);
 
-            if (requireEncryption)
+            if (requireEncryption && credentials == null)
             {
-                // In the original code, this uses a native binding
-                // For C#, we would need to implement AES encryption
                 alac = AirTunesEncryption.EncryptAES(alac);
             }
-
-            Buffer.BlockCopy(header, 0, airTunes, 0, header.Length);
-            Buffer.BlockCopy(alac, 0, airTunes, RTP_HEADER_SIZE, alac.Length);
-
+            if (credentials != null)
+            {
+                byte[] pcm = credentials.EncryptAudio(alac, header.Skip(4).Take(8).ToArray(),packet.Seq.Value);
+                byte[] airplay = new byte[pcm.Length + RTP_HEADER_SIZE];
+                header.CopyTo(airplay, 0);
+                pcm.CopyTo(airplay, RTP_HEADER_SIZE);
+                return airplay;
+            } else {
+                Buffer.BlockCopy(header, 0, airTunes, 0, header.Length);
+                Buffer.BlockCopy(alac, 0, airTunes, RTP_HEADER_SIZE, alac.Length);
+            }
             return airTunes;
         }
 

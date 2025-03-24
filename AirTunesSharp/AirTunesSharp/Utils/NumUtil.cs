@@ -124,6 +124,15 @@ namespace AirTunesSharp.Utils
             else
                 return data;
         }
+
+        public static long randomInt(int n)
+        {
+            var random = new Random();
+            string s = string.Empty;
+            for (int i = 0; i < n; i++)
+                s = String.Concat(s, random.Next(10).ToString());
+            return long.Parse(s);
+        }
         
 
     }

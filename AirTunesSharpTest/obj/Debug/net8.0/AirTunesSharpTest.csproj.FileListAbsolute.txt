@@ -62,3 +62,5 @@ C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\Rebex.Secu
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\Tmds.MDns.dll
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\artwork.png
 C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\output.pcm
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\plist-cil.dll
+C:\Users\vapormusic\Downloads\aaaa\AirTunesSharpTest\bin\Debug\net8.0\srp.dll

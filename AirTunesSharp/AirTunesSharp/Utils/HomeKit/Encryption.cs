@@ -11,17 +11,17 @@ namespace AirTunesSharp.Utils.HomeKit
     internal class Encryption
     {
         public static byte[]? VerifyAndDecrypt(byte[] cipherText, byte[] mac, byte[]? AAD, byte[] nonce, byte[] key) {
-            try
-            {
+            // try
+            // {
                 if (nonce.Length == 8) nonce = (new byte[] { 0x00, 0x00, 0x00, 0x00 }).Concat(nonce).ToArray();
                 var decipher = new NaCl.Core.ChaCha20Poly1305(key);
                 byte[] plaintext = new byte[cipherText.Length];
                 decipher.Decrypt(nonce, cipherText, mac, plaintext, AAD);
                 return plaintext;
-            } catch (Exception e)
-            {
-                return null;
-            }
+            // } catch (Exception e)
+            // {
+            //     return null;
+            // }
         }
         
         public static (byte[], byte[]) EncryptAndSeal(byte[] plainText, byte[]? AAD, byte[] nonce, byte[] key)

@@ -130,7 +130,7 @@
           "lib/netstandard1.3/Microsoft.CSharp.dll": {}
         }
       },
-      "Microsoft.NETCore.Platforms/1.1.0": {
+      "Microsoft.NETCore.Platforms/1.1.1": {
         "type": "package",
         "compile": {
           "lib/netstandard1.0/_._": {}
@@ -139,7 +139,7 @@
           "lib/netstandard1.0/_._": {}
         }
       },
-      "Microsoft.NETCore.Targets/1.1.0": {
+      "Microsoft.NETCore.Targets/1.1.3": {
         "type": "package",
         "compile": {
           "lib/netstandard1.0/_._": {}
@@ -217,6 +217,19 @@
           "System.Threading.Timer": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0",
           "System.Xml.XDocument": "4.3.0"
+        }
+      },
+      "plist-cil/2.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/net5.0/plist-cil.dll": {
+            "related": ".pdb"
+          }
+        },
+        "runtime": {
+          "lib/net5.0/plist-cil.dll": {
+            "related": ".pdb"
+          }
         }
       },
       "Rebex.Common/7.0.9209": {
@@ -455,6 +468,27 @@
         "runtime": {
           "lib/netstandard1.3/SimpleBase.dll": {
             "related": ".pdb"
+          }
+        }
+      },
+      "srp/1.0.7": {
+        "type": "package",
+        "dependencies": {
+          "System.Globalization": "4.3.0",
+          "System.Linq": "4.3.0",
+          "System.Runtime": "4.3.1",
+          "System.Runtime.Numerics": "4.3.0",
+          "System.Security.Cryptography.Algorithms": "4.3.1",
+          "System.Text.RegularExpressions": "4.3.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/srp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/srp.dll": {
+            "related": ".xml"
           }
         }
       },
@@ -1048,11 +1082,11 @@
           }
         }
       },
-      "System.Runtime/4.3.0": {
+      "System.Runtime/4.3.1": {
         "type": "package",
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "1.1.0",
-          "Microsoft.NETCore.Targets": "1.1.0"
+          "Microsoft.NETCore.Platforms": "1.1.1",
+          "Microsoft.NETCore.Targets": "1.1.3"
         },
         "compile": {
           "ref/netstandard1.5/System.Runtime.dll": {
@@ -1393,10 +1427,10 @@
           }
         }
       },
-      "System.Text.RegularExpressions/4.3.0": {
+      "System.Text.RegularExpressions/4.3.1": {
         "type": "package",
         "dependencies": {
-          "System.Runtime": "4.3.0"
+          "System.Runtime": "4.3.1"
         },
         "compile": {
           "ref/netcoreapp1.1/System.Text.RegularExpressions.dll": {}
@@ -1720,32 +1754,32 @@
         "ref/xamarinwatchos10/_._"
       ]
     },
-    "Microsoft.NETCore.Platforms/1.1.0": {
-      "sha512": "kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
+    "Microsoft.NETCore.Platforms/1.1.1": {
+      "sha512": "TMBuzAHpTenGbGgk0SMTwyEkyijY/Eae4ZGsFNYJvAr/LDn1ku3Etp3FPxChmDp5HHF3kzJuoaa08N0xjqAJfQ==",
       "type": "package",
-      "path": "microsoft.netcore.platforms/1.1.0",
+      "path": "microsoft.netcore.platforms/1.1.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
         "lib/netstandard1.0/_._",
-        "microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+        "microsoft.netcore.platforms.1.1.1.nupkg.sha512",
         "microsoft.netcore.platforms.nuspec",
         "runtime.json"
       ]
     },
-    "Microsoft.NETCore.Targets/1.1.0": {
-      "sha512": "aOZA3BWfz9RXjpzt0sRJJMjAscAUm3Hoa4UWAfceV9UTYxgwZ1lZt5nO2myFf+/jetYQo4uTP7zS8sJY67BBxg==",
+    "Microsoft.NETCore.Targets/1.1.3": {
+      "sha512": "3Wrmi0kJDzClwAC+iBdUBpEKmEle8FQNsCs77fkiOIw/9oYA07bL1EZNX0kQ2OMN3xpwvl0vAtOCYY3ndDNlhQ==",
       "type": "package",
-      "path": "microsoft.netcore.targets/1.1.0",
+      "path": "microsoft.netcore.targets/1.1.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
         "lib/netstandard1.0/_._",
-        "microsoft.netcore.targets.1.1.0.nupkg.sha512",
+        "microsoft.netcore.targets.1.1.3.nupkg.sha512",
         "microsoft.netcore.targets.nuspec",
         "runtime.json"
       ]
@@ -1820,6 +1854,27 @@
         "dotnet_library_license.txt",
         "netstandard.library.1.6.1.nupkg.sha512",
         "netstandard.library.nuspec"
+      ]
+    },
+    "plist-cil/2.2.0": {
+      "sha512": "Y1+I11Aani2FGdWRnHCdp9O3ZQDcPKd+rflO83ZtJ1Cm3OEaKuvz4w9BCq/HXJn6tB5lhv1Dmhrt9Jgxx3Uftg==",
+      "type": "package",
+      "path": "plist-cil/2.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/plist-cil.dll",
+        "lib/net45/plist-cil.pdb",
+        "lib/net5.0/plist-cil.dll",
+        "lib/net5.0/plist-cil.pdb",
+        "lib/netcoreapp2.1/plist-cil.dll",
+        "lib/netcoreapp2.1/plist-cil.pdb",
+        "lib/netcoreapp3.1/plist-cil.dll",
+        "lib/netcoreapp3.1/plist-cil.pdb",
+        "lib/netstandard2.0/plist-cil.dll",
+        "lib/netstandard2.0/plist-cil.pdb",
+        "plist-cil.2.2.0.nupkg.sha512",
+        "plist-cil.nuspec"
       ]
     },
     "Rebex.Common/7.0.9209": {
@@ -2191,6 +2246,27 @@
         "lib/netstandard1.3/SimpleBase.pdb",
         "simplebase.1.3.1.nupkg.sha512",
         "simplebase.nuspec"
+      ]
+    },
+    "srp/1.0.7": {
+      "sha512": "FJlWxoKlDUOnI8+uTwH121M2C3gc3vvmCYg34kNwaJfGaSaJw2kV+UsgEtoPm+RhGlLo5k8vpBVhnlCTIfheXQ==",
+      "type": "package",
+      "path": "srp/1.0.7",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net35/srp.dll",
+        "lib/net35/srp.xml",
+        "lib/net40/srp.dll",
+        "lib/net40/srp.xml",
+        "lib/net45/srp.dll",
+        "lib/net45/srp.xml",
+        "lib/netstandard1.6/srp.dll",
+        "lib/netstandard1.6/srp.xml",
+        "lib/netstandard2.0/srp.dll",
+        "lib/netstandard2.0/srp.xml",
+        "srp.1.0.7.nupkg.sha512",
+        "srp.nuspec"
       ]
     },
     "System.AppContext/4.3.0": {
@@ -4016,10 +4092,10 @@
         "system.resources.resourcemanager.nuspec"
       ]
     },
-    "System.Runtime/4.3.0": {
-      "sha512": "JufQi0vPQ0xGnAczR13AUFglDyVYt4Kqnz1AZaiKZ5+GICq0/1MH/mO/eAJHt/mHW1zjKBJd7kV26SrxddAhiw==",
+    "System.Runtime/4.3.1": {
+      "sha512": "abhfv1dTK6NXOmu4bgHIONxHyEqFjW8HwXPmpY9gmll+ix9UNo4XDcmzJn6oLooftxNssVHdJC1pGT9jkSynQg==",
       "type": "package",
-      "path": "system.runtime/4.3.0",
+      "path": "system.runtime/4.3.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -4104,7 +4180,7 @@
         "ref/xamarinmac20/_._",
         "ref/xamarintvos10/_._",
         "ref/xamarinwatchos10/_._",
-        "system.runtime.4.3.0.nupkg.sha512",
+        "system.runtime.4.3.1.nupkg.sha512",
         "system.runtime.nuspec"
       ]
     },
@@ -4791,10 +4867,10 @@
         "system.text.encoding.extensions.nuspec"
       ]
     },
-    "System.Text.RegularExpressions/4.3.0": {
-      "sha512": "RpT2DA+L660cBt1FssIE9CAGpLFdFPuheB7pLpKpn6ZXNby7jDERe8Ua/Ne2xGiwLVG2JOqziiaVCGDon5sKFA==",
+    "System.Text.RegularExpressions/4.3.1": {
+      "sha512": "N0kNRrWe4+nXOWlpLT4LAY5brb8caNFlUuIRpraCVMDLYutKkol1aV079rQjLuSxKMJT2SpBQsYX9xbcTMmzwg==",
       "type": "package",
-      "path": "system.text.regularexpressions/4.3.0",
+      "path": "system.text.regularexpressions/4.3.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -4871,7 +4947,7 @@
         "ref/xamarinmac20/_._",
         "ref/xamarintvos10/_._",
         "ref/xamarinwatchos10/_._",
-        "system.text.regularexpressions.4.3.0.nupkg.sha512",
+        "system.text.regularexpressions.4.3.1.nupkg.sha512",
         "system.text.regularexpressions.nuspec"
       ]
     },
@@ -5267,7 +5343,9 @@
       "Rebex.Security >= 7.0.9209",
       "System.Net.Sockets >= 4.3.0",
       "System.Security.Cryptography.Algorithms >= 4.3.1",
-      "Tmds.MDns >= 0.8.0"
+      "Tmds.MDns >= 0.8.0",
+      "plist-cil >= 2.2.0",
+      "srp >= 1.0.7"
     ]
   },
   "packageFolders": {
@@ -5288,14 +5366,12 @@
       ],
       "configFilePaths": [
         "C:\\Users\\vapormusic\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -5355,6 +5431,14 @@
           "Tmds.MDns": {
             "target": "Package",
             "version": "[0.8.0, )"
+          },
+          "plist-cil": {
+            "target": "Package",
+            "version": "[2.2.0, )"
+          },
+          "srp": {
+            "target": "Package",
+            "version": "[1.0.7, )"
           }
         },
         "imports": [

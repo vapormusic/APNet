@@ -122,7 +122,7 @@ namespace AirTunesSharp.Network
                     catch (Exception)
                     {
                         // Handle socket errors
-                        if (_status == UNBOUND) break;
+                        // if (_status == UNBOUND) break;
                     }
                 }
             });
@@ -159,7 +159,7 @@ namespace AirTunesSharp.Network
                     catch (Exception)
                     {
                         // Handle socket errors
-                        if (_status == UNBOUND) break;
+                        // if (_status == UNBOUND) break;
                     }
                 }
             });

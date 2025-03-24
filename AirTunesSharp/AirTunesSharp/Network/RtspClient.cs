@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.IO;
 using AirTunesSharp.Utils;
+using AirTunesSharp.Utils.HomeKit;
+using SecureRemotePassword;
+using Claunia.PropertyList;
+using Rebex.Security.Cryptography;
+using System.Diagnostics;
+using AirTunesSharp.Audio;
+using Makaretu.Dns;
 
 namespace AirTunesSharp.Network
 {
@@ -47,7 +54,8 @@ namespace AirTunesSharp.Network
         SETPEERS = 25,
         FLUSH = 26,
         GETVOLUME = 27,
-        SETPROGRESS = 28;
+        SETPROGRESS = 28,
+        INFO = -1;
 
         private readonly Audio.AudioOut _audioOut;
         private int _status;
@@ -68,13 +76,61 @@ namespace AirTunesSharp.Network
         private Action<object[]>? _callback;
         private int? _controlPort;
         private int? _timingPort;
-
         private int? _serverPort;
+        private int? _timingDestPort;
+        private int? _eventPort;
         private System.Timers.Timer? _heartBeat;
 
         private Dictionary<string, string>? _digestInfo;
 
         private bool _triedMd5Uppercase = false;
+
+        private string I = "366B4165DD64AD3A";
+        private string P;
+        private string s;
+        private string B;
+        private string A;
+        private string a;
+        private byte[] Al;
+        private string M1;
+        private SrpSession M1Session;
+        private string epk;
+        private string authTag;
+        private string _atv_salt;
+        private string _atv_pub_key;
+        private string _hap_genkey;
+        private byte[] _hap_encrypteddata;
+        private string? pairingId;
+        private byte[] K;
+        private byte[] seed;
+        private byte[] sharedSecret;
+        private Credentials credentials;
+        private byte[] event_credentials;
+        private Dictionary<string, byte[]>? verifier_hap_1;
+        private byte[] verifyPrivate;
+        private byte[] verifyPublic;
+        private byte[] encryptionKey;
+        private bool encryptedChannel;
+        private string hostip;
+        private string homekitver;
+
+        private Dictionary<string, string>? pair_verify_1_verifier;
+        private byte[] pair_verify_1_signature;
+        private string code_digest;
+        private string authSecret;
+        private int mode;
+        private string[] dnstxt;
+        private bool alacEncoding;
+        private bool needPassword;
+        private bool airplay2;
+        private bool needPin;
+        private bool debug;
+        private bool transient;
+        // private bool borkedshp;
+        private byte[] privateKey;
+        private byte[] deviceProof;
+        private SrpClient? srp;
+        private TcpClient? eventsocket;
 
         /// <summary>
         /// Initializes a new instance of the RtspClient class
@@ -82,7 +138,7 @@ namespace AirTunesSharp.Network
         /// <param name="volume">Initial volume</param>
         /// <param name="password">Password for authentication</param>
         /// <param name="audioOut">Audio output manager</param>
-        public RtspClient(int volume, string? password, Audio.AudioOut audioOut)
+        public RtspClient(int volume, string? password, Audio.AudioOut audioOut, dynamic? options = null)
         {
             _audioOut = audioOut;
             _status = OPTIONS;
@@ -105,6 +161,44 @@ namespace AirTunesSharp.Network
             _timingPort = null;
             _heartBeat = null;
             _digestInfo = null;
+            pair_verify_1_verifier = null;
+            pair_verify_1_signature = null;
+            code_digest = null;
+            authSecret = null;
+            mode = options?.mode ?? 0;
+            dnstxt = options?.txt ?? new string[0];
+            alacEncoding = options?.alacEncoding ?? true;
+            needPassword = options?.needPassword ?? false;
+            airplay2 = options?.airplay2 ?? false;
+            needPin = options?.needPin ?? false;
+            debug = options?.debug ?? false;
+            transient = options?.transient ?? false;
+            // borkedshp = options?.borkedshp ?? false;
+            privateKey = null;
+            srp = null;
+            I = "366B4165DD64AD3A";
+            P = null;
+            s = null;
+            B = null;
+            a = null;
+            A = null;
+            M1 = null;
+            epk = null;
+            authTag = null;
+            _atv_salt = null;
+            _atv_pub_key = null;
+            _hap_genkey = null;
+            _hap_encrypteddata = null;
+            pairingId = null;
+            seed = null;
+            credentials = null;
+            event_credentials = null;
+            verifier_hap_1 = null;
+            encryptionKey = null;
+            encryptedChannel = false;
+            hostip = null;
+            homekitver = (transient == true) ? "4" : "3";
+
         }
 
         /// <summary>
@@ -119,10 +213,11 @@ namespace AirTunesSharp.Network
 
             _controlPort = udpServers.Control.Port;
             _timingPort = udpServers.Timing.Port;
+            hostip = host;
 
             _socket = new TcpClient();
-            _socket.ReceiveTimeout = 4000;
-            _socket.SendTimeout = 4000;           
+            _socket.ReceiveTimeout = 40000;
+            _socket.SendTimeout = 40000;           
             try
             {
                 _socket.ConnectAsync(host, port).ContinueWith(t => 
@@ -133,13 +228,48 @@ namespace AirTunesSharp.Network
                         return;
                     }
 
-                    ClearTimeout();
-                    SendNextRequest();
-                    StartHeartBeat();
+                    if (needPassword == true)
+                    {
+                        Debug.WriteLine("s1");
+                        _status = PAIR_PIN_START;
+                        ClearTimeout();
+                        SendNextRequest();
+                        StartHeartBeat();
+                    }
+                    else
+                    {
+                        if (this.mode != 2)
+                        {
+                            Debug.WriteLine("s2");
+                            if (this.debug) Debug.WriteLine("AUTH_SETUP", "nah");
+                            _status = OPTIONS;
+                            ClearTimeout();
+                            SendNextRequest();
+                            StartHeartBeat();
+                        }
+                        else
+                        {
+                            Debug.WriteLine("s3");
+                            _status = AUTH_SETUP;
+                            if (this.debug) Debug.WriteLine("AUTH_SETUP", "yah");
+                            ClearTimeout();
+                            SendNextRequest();
+                            StartHeartBeat();
+                        }
+
+
+                    }
+
+
 
                     NetworkStream stream = _socket.GetStream();
-                    byte[] buffer = new byte[4096];
+                    byte[] buffer = new byte[100000];
                     StringBuilder blob = new StringBuilder();
+                    bool encryptedOkay = false;
+                    var encryptedBlob = new byte[0];
+                    var decrpytedData = new byte[0];
+                    
+                    int lastRead = 0;
 
                     Task.Run(async () => 
                     {
@@ -147,29 +277,98 @@ namespace AirTunesSharp.Network
                         {
                             while (_socket != null && _socket.Connected)
                             {
-                                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                                if (bytesRead <= 0)
+                                using (MemoryStream ms = new MemoryStream())
                                 {
-                                    Cleanup("disconnected");
-                                    break;
-                                }
+                                    byte[] buffer = new byte[81920];
+                                    do
+                                    {
+                                        lastRead = stream.Read(buffer, 0, buffer.Length);
+                                        ms.Write(buffer, 0, lastRead);
+                                    } while (lastRead > buffer.Length);
+                                    encryptedBlob = ms.ToArray();
+                                    int[] x = (new int[] { PAIR_SETUP_1, PAIR_SETUP_2, PAIR_SETUP_3, PAIR_VERIFY_HAP_1, PAIR_VERIFY_HAP_2 });
+                                    if (Encoding.UTF8.GetString(encryptedBlob) == "")
+                                    {
+                                        Cleanup("done");
+                                    }
+                                    if (this.encryptedChannel && this.credentials != null)
+                                    {
+                                        decrpytedData = this.credentials.decrypt(encryptedBlob);
+                                    } else {
+                                        decrpytedData = encryptedBlob;
+                                    }
 
-                                ClearTimeout();
+                                    string data = Encoding.UTF8.GetString(decrpytedData, 0, decrpytedData.Length);
+                                    blob.Append(data);
 
-                                string data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                                blob.Append(data);
+                                    int endIndex = blob.ToString().IndexOf("\r\n\r\n");
+                                    if (endIndex < 0)
+                                         continue;
 
-                                int endIndex = blob.ToString().IndexOf("\r\n\r\n");
-                                if (endIndex < 0)
-                                    continue;
+                                    endIndex += 4;
+                                    string response = blob.ToString().Substring(0, endIndex);           
 
-                                endIndex += 4;
-                                string response = blob.ToString().Substring(0, endIndex);
-                                ProcessData(response);
 
-                                blob.Clear();
-                                if (endIndex < data.Length)
-                                    blob.Append(data.Substring(endIndex));
+                                    Debug.WriteLine("Received:");
+                                    Debug.WriteLine(Encoding.UTF8.GetString(decrpytedData));
+                                    ProcessData(response,decrpytedData);
+                                    blob.Clear();
+                                    if (endIndex < data.Length)
+                                        blob.Append(data.Substring(endIndex));
+                                    decrpytedData = new byte[0];
+                            }
+
+                                // int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                                // if (bytesRead <= 0)
+                                // {
+                                //     Cleanup("disconnected");
+                                //     break;
+                                // }
+
+                                // do             
+                                // {
+                                //     lastRead = stream.Read(buffer, 0, buffer.Length);
+                                //     ms.Write(buffer, 0, lastRead);
+                                // } while (lastRead > buffer.Length);
+
+                                // ClearTimeout();
+                                // encryptedBlob = encryptedBlob.Concat(buffer.Take(bytesRead).ToArray()).ToArray();
+
+                                // if (encryptedChannel && credentials != null)
+                                // {          
+
+                                //     byte[] lengthbytes = encryptedBlob.Take(2).ToArray();
+                                //     int length = BitConverter.ToUInt16(lengthbytes, 0);
+                                //     if (encryptedBlob.Length == length - 16 - 2)
+                                //     {
+                                //         buffer = credentials.decrypt(encryptedBlob);
+                                //         encryptedOkay = true;
+                                //         encryptedBlob = new byte[0];
+                                //     }
+
+                                // }
+                                // else {
+                                //     encryptedOkay = true;
+                                // }
+                                // if (encryptedOkay){
+
+                                //     string data = Encoding.UTF8.GetString(buffer, 0, Math.Min(bytesRead, buffer.Length));
+                                //     blob.Append(data);
+
+                                //     int endIndex = blob.ToString().IndexOf("\r\n\r\n");
+                                //     if (endIndex < 0 && encryptedOkay)
+                                //         continue;
+
+                                //     endIndex += 4;
+                                //     string response = blob.ToString().Substring(0, endIndex);                
+
+
+                                //     ProcessData(response, buffer);
+
+                                //     blob.Clear();
+                                //     if (endIndex < data.Length)
+                                //         blob.Append(data.Substring(endIndex));
+                                // }
                             }
                         }
                         catch (Exception ex)
@@ -177,6 +376,7 @@ namespace AirTunesSharp.Network
                             if (_socket != null)
                             {
                                 _socket = null;
+                                Console.WriteLine(ex.StackTrace);
                                 Cleanup("rtsp_socket", ex.Message);
                             }
                         }
@@ -373,12 +573,26 @@ namespace AirTunesSharp.Network
         /// Processes RTSP response data
         /// </summary>
         /// <param name="blob">Response data</param>
-        private void ProcessData(string blob)
+        private void ProcessData(string blob, byte[] rawData)
         {
             RtspResponse response = RtspResponse.ParseResponse(blob);
             Console.WriteLine($"Resp status: {_status} {response.Code} {response.Status}");
             Console.WriteLine($"Headers: {string.Join(Environment.NewLine, response.Headers)}");
             Console.WriteLine($"Body: {response.Body}");
+
+
+            string responseText = Encoding.UTF8.GetString(rawData);
+            // Get the headers
+            string[] headers_p = responseText.Split(new string[] { "\r\n\r\n" }, StringSplitOptions.None);
+            string[] headerLines = headers_p[0].Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            string[] statusLine = headerLines[0].Split(" ");
+    
+            byte[] body = new byte[0];
+            if (headers_p.Length > 1)
+            {
+                body = rawData.Skip(headers_p[0].Length + 4).ToArray();
+            }
+            
 
             if (response.Code >= 400 & response.Code != 416)
             {
@@ -419,6 +633,267 @@ namespace AirTunesSharp.Network
 
             switch (_status)
             {
+                case PAIR_PIN_START:
+                    if (!this.transient) { 
+                        Emit("need_password");
+                     }
+                    _status = airplay2 ? PAIR_SETUP_1 : PAIR_PIN_SETUP_1;
+                    break;
+                case PAIR_PIN_SETUP_1:
+                    var N = "AC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC319294" +
+                            "3DB56050A37329CBB4A099ED8193E0757767A13DD52312AB4B03310D" +
+                            "CD7F48A9DA04FD50E8083969EDB767B0CF6095179A163AB3661A05FB" +
+                            "D5FAAAE82918A9962F0B93B855F97993EC975EEAA80D740ADBF4FF74" +
+                            "7359D041D5C33EA71D281E446B14773BCA97B43A23FB801676BD207A" +
+                            "436C6481F1D2B9078717461A5B9D32E688F87748544523B524B0D57D" +
+                            "5EA77A2775D2ECFA032CFBDBF52FB3786160279004E57AE6AF874E73" +
+                            "03CE53299CCC041C7BC308D82A5698F3A8D0C38271AE35F8E9DBFBB6" +
+                            "94B5C803D89F7AE435DE236D525F54759B65E372FCD68EF20FA7111F" +
+                            "9E4AFF73";
+                    var customParams = SrpParameters.Create<SHA1>(N, "02");
+                    srp = new SrpClient();
+                    P = _password;
+                    var pps1_bplist = BinaryPropertyListParser.Parse(body) as NSDictionary;
+                    Debug.WriteLine(BinaryPropertyListParser.Parse(body).ToXmlPropertyList());
+                    s = Convert.ToHexString((pps1_bplist.Get("salt") as NSData).Bytes);
+                    B = Convert.ToHexString((pps1_bplist.Get("pk") as NSData).Bytes);
+                    NSDictionary dict = new NSDictionary();
+                    // SRP: Generate random auth_secret, "a"; if pairing is successful, it"ll be utilized in
+                    // subsequent session authentication(s).
+
+                    // SRP: Compute A and M1.
+                    var srpEphemeral = this.srp.GenerateEphemeral();
+                    this.a = srpEphemeral.Secret;
+                    this.A = srpEphemeral.Public;
+                    this.M1 = this.srp.DeriveSession(this.a, this.B, this.s, this.I, this.srp.DerivePrivateKey(this.s, this.I, this.P)).Proof;
+                    _status = PAIR_PIN_SETUP_2;
+                    break;
+                case PAIR_PIN_SETUP_2:
+                    Dictionary<string, string> pps2_dict = LegacyATVVerifier.confirm(this.a, this.M1);
+                    this.epk = pps2_dict["epk"];
+                    this.authTag = pps2_dict["authTag"];
+                    _status = PAIR_PIN_SETUP_3;
+                    break;
+                case PAIR_PIN_SETUP_3:
+                    _status = PAIR_VERIFY_1;
+                    this.authSecret = this.a;
+                    break;
+                case PAIR_VERIFY_1:
+                    string atv_pub = Convert.ToHexString(body.Skip(0).Take(32).ToArray());
+                    string atv_data = Convert.ToHexString(body.Skip(32).ToArray());
+
+                    string shared = LegacyATVVerifier.shared(v_pri: this.pair_verify_1_verifier["v_pri"], atv_pub);
+                    string signed = LegacyATVVerifier.signed(this.authSecret, this.pair_verify_1_verifier["v_pub"], atv_pub);
+                    this.pair_verify_1_signature = (new byte[] { 0x00, 0x00, 0x00, 0x00 }).Concat(Convert.FromHexString(LegacyATVVerifier.signature(shared, atv_data, signed))).ToArray();
+                    _status = PAIR_VERIFY_2;
+                    break;
+                case PAIR_VERIFY_2:
+                    _status = this.mode == 2 ? AUTH_SETUP : OPTIONS;
+                    break;
+                case PAIR_SETUP_1:
+                    Debug.WriteLine("yah");
+                    Dictionary<byte, byte[]> databuf1 = Tlv.Decode(body);
+                    Debug.WriteLine(databuf1.ToString());
+                    if (databuf1.ContainsKey(TlvTag.BackOff)) {
+                        byte[] backOff = databuf1[TlvTag.BackOff];
+                        int seconds = BitConverter.ToInt16(backOff, 0);
+
+                        Debug.WriteLine("You've attempt to pair too recently. Try again in " + (seconds.ToString()) + " seconds.");
+
+                    }
+                    if (databuf1.ContainsKey(TlvTag.ErrorCode))
+                    {
+                        byte[] buffer = databuf1[TlvTag.ErrorCode];
+                        Debug.WriteLine("Device responded with error code " + Convert.ToSByte(buffer).ToString() + ". Try rebooting your Apple TV.");
+                    }
+                    if (databuf1.ContainsKey(TlvTag.PublicKey))
+                    {
+                        this._atv_pub_key = Convert.ToHexString(databuf1[TlvTag.PublicKey]);
+                        this._atv_salt = Convert.ToHexString(databuf1[TlvTag.Salt]);
+                        //this._hap_genkey = new byte[32];
+                        //RandomNumberGenerator rng = RandomNumberGenerator.Create();
+                        //rng.GetBytes(this._hap_genkey);
+                        if (_password == null)
+                        {
+                            _password = "3939"; // transient
+                        }
+                        string SRP_AP2_N = "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
+                                "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B" +
+                                "302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
+                                "A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE6" +
+                                "49286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8" +
+                                "FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D" +
+                                "670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C" +
+                                "180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF695581718" +
+                                "3995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D" +
+                                "04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7D" +
+                                "B3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D226" +
+                                "1AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200C" +
+                                "BBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFC" +
+                                "E0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
+                        var customParams_ap2 = SrpParameters.Create<SHA512>(SRP_AP2_N, "05");
+                        this.srp = new SrpClient(customParams_ap2);
+                        //this.srp = new SrpClient(SRP.params.hap,
+                        //Buffer.from(this._atv_salt), //salt
+                        //Buffer.from("Pair-Setup"), //identity
+                        //Buffer.from(this.password.toString()), //password
+                        //Buffer.from(this._hap_genkey), true) // sec
+                        var srpEphemeral2 = this.srp.GenerateEphemeral();
+                        this._hap_genkey = srpEphemeral2.Secret;
+                        this.A = srpEphemeral2.Public;
+                        this.M1Session = this.srp.DeriveSession(this._hap_genkey, this._atv_pub_key, this._atv_salt, "Pair-Setup", this.srp.DerivePrivateKey(this._atv_salt, "Pair-Setup", _password));
+                        this.M1 = M1Session.Proof;
+                        _status = PAIR_SETUP_2;
+                    } else {
+                        Emit("end", "no pk");
+                        Cleanup("pair_failed");
+                        return;
+                    }
+                    break;
+                case PAIR_SETUP_2:
+                    Dictionary<byte, byte[]> databuf2 = Tlv.Decode(body);
+                    this.deviceProof = databuf2[TlvTag.Proof];
+                    // console.log("DEBUG: Device Proof=" + this.deviceProof.toString("hex"));
+                    srp.VerifySession(this.A, this.M1Session, Convert.ToHexString(this.deviceProof));
+                    if (this.transient == true)
+                    {
+                        this.credentials = new Credentials(
+                          "sdsds",
+                          new byte[0],
+                          "",
+                          new byte[0],
+                          this.seed
+                        );
+                        this.credentials.writeKey = Encryption.HKDF(
+                          Encoding.ASCII.GetBytes("Control-Salt"),
+                          Convert.FromHexString(this.M1Session.Key),
+                          Encoding.ASCII.GetBytes("Control-Write-Encryption-Key"),
+                          32
+                        );
+                        Debug.WriteLine("hmm " + this.credentials.writeKey.Length);
+                        this.credentials.readKey = Encryption.HKDF(
+                          Encoding.ASCII.GetBytes("Control-Salt"),
+                          Convert.FromHexString(this.M1Session.Key),
+                          Encoding.ASCII.GetBytes("Control-Read-Encryption-Key"),
+                          32
+                        );
+                        Console.WriteLine("write " + Convert.ToHexString(this.credentials.writeKey));
+                        this.encryptedChannel = true;
+                        _status = SETUP_AP2_1;
+                    }
+                    else
+                    {
+                        _status = PAIR_SETUP_3;
+                    }
+                    break;
+                case PAIR_SETUP_3:
+                    byte[] encryptedData = Tlv.Decode(body)[TlvTag.EncryptedData];
+                    byte[] cipherText = encryptedData.Skip(0).Take(encryptedData.Length - 16).ToArray();
+                    byte[] hmac = encryptedData.Skip(encryptedData.Length - 16).Take(16).ToArray();
+                    byte[] decrpytedData = Encryption.VerifyAndDecrypt(cipherText, hmac, null, Encoding.ASCII.GetBytes("PS-Msg06"), this.encryptionKey);
+                    Dictionary<byte, byte[]> tlvData = Tlv.Decode(decrpytedData);
+                    this.credentials = new Credentials(
+                       "sdsds",
+                       tlvData[TlvTag.Username],
+                       pairingId,
+                       tlvData[TlvTag.PublicKey],
+                      this.seed
+                     );
+                    _status = PAIR_VERIFY_HAP_1;
+                    break;
+                case PAIR_VERIFY_HAP_1:
+                    Dictionary<byte, byte[]> decodedData = Tlv.Decode(body);
+                    byte[] sessionPublicKey = decodedData[TlvTag.PublicKey];
+                    byte[] encryptedData1 = decodedData[TlvTag.EncryptedData];
+
+                    if (sessionPublicKey.Length != 32)
+                    {
+                        throw new Exception(String.Format("sessionPublicKey must be 32 bytes(but was {0})", sessionPublicKey.Length));
+                    }
+                    byte[] cipherText1 = encryptedData1.Skip(0).Take(encryptedData1.Length - 16).ToArray();
+                    byte[] hmac1 = encryptedData1.Skip(encryptedData1.Length - 16).Take(16).ToArray();
+                    // let sharedSecret = curve25519.deriveSharedSecret(this.verifyPrivate, sessionPublicKey);
+                    var curve25519 = new Curve25519();
+                    curve25519.FromPrivateKey(this.verifyPrivate);
+                    byte[] sharedSecret = curve25519.GetSharedSecret(sessionPublicKey);
+                    byte[] encryptionKey = Encryption.HKDF(
+                        Encoding.ASCII.GetBytes("Pair-Verify-Encrypt-Salt"),
+                        sharedSecret,
+                        Encoding.ASCII.GetBytes("Pair-Verify-Encrypt-Info"),
+                        32
+                    );
+                    byte[] decryptedData = Encryption.VerifyAndDecrypt(cipherText1, hmac1, null, Encoding.ASCII.GetBytes("PV-Msg02"), encryptionKey);
+                    this.verifier_hap_1 = new Dictionary<string, byte[]>();
+                    this.verifier_hap_1.Add("sessionPublicKey", sessionPublicKey);
+                    this.verifier_hap_1.Add("sharedSecret", sharedSecret);
+                    this.verifier_hap_1.Add("encryptionKey", encryptionKey);
+                    this.verifier_hap_1.Add("pairingData", decryptedData);
+                    _status = PAIR_VERIFY_HAP_2;
+                    this.sharedSecret = sharedSecret;
+                    break;
+                case PAIR_VERIFY_HAP_2:
+                    this.credentials.readKey = Encryption.HKDF(
+                      Encoding.ASCII.GetBytes("Control-Salt"),
+                      this.sharedSecret,
+                      Encoding.ASCII.GetBytes("Control-Read-Encryption-Key"),
+                      32
+                    );
+                    this.credentials.writeKey = Encryption.HKDF(
+                      Encoding.ASCII.GetBytes("Control-Salt"),
+                      this.sharedSecret,
+                      Encoding.ASCII.GetBytes("Control-Write-Encryption-Key"),
+                      32
+                    );
+                    //if (this.debug) { console.log("write", this.credentials.writeKey)}
+                    //if (this.debug) { console.log("buf6", buf6)}
+                    this.encryptedChannel = true;
+                    _status = (this.mode == 2 ? AUTH_SETUP : SETUP_AP2_1);
+                    break;
+                case SETUP_AP2_1:
+                    Debug.WriteLine("timing port parsing");
+                    NSDictionary sa1_bplist = BinaryPropertyListParser.Parse(body) as NSDictionary;
+                    Debug.WriteLine(sa1_bplist.ToXmlPropertyList());
+                    _eventPort = ((NSNumber)sa1_bplist.ObjectForKey("eventPort")).ToInt();
+                    if (sa1_bplist.TryGetValue("timingPort", out NSObject timingPort)) {
+                        this._timingDestPort = ((NSNumber)sa1_bplist.ObjectForKey("timingPort")).ToInt();
+                    }
+                    Debug.WriteLine("timing port parsing ", _eventPort.ToString());
+                    _status = SETPEERS;
+                    
+                    break;
+                case SETUP_AP2_2:
+                    NSDictionary sa2_bplist = BinaryPropertyListParser.Parse(body) as NSDictionary;
+                    Debug.WriteLine(sa2_bplist.ToXmlPropertyList());
+                    NSDictionary stream = ((NSArray)sa2_bplist.ObjectForKey("streams")).First() as NSDictionary;
+                    Emit("config", new
+                    {
+                        audioLatency = 50,
+                        requireEncryption = _requireEncryption,
+                        server_port = ((NSNumber)stream.ObjectForKey("dataPort")).ToInt(),
+                        control_port = ((NSNumber)stream.ObjectForKey("controlPort")).ToInt(),
+                        timing_port = (this._timingDestPort != null) ? this._timingDestPort : _timingPort,
+                        credentials = this.credentials
+                    });
+                    _status = RECORD;
+                    break;
+                case SETPEERS:
+                    _status = SETUP_AP2_2;
+                    break;
+                case FLUSH:
+                    _status = PLAYING;
+                    Emit("pair_success");
+                    _session = "1";
+                    Emit("ready");
+                    break;
+                case INFO:
+                    _status = (this.credentials != null) ? RECORD : PAIR_SETUP_1;
+                    break;
+                case GETVOLUME:
+                    _status = RECORD;
+                    break;
+                case AUTH_SETUP:
+                    _status = this.airplay2 ? SETUP_AP2_1 : OPTIONS;
+                    break;
                 case HEARTBEAT:
                     if (_status != SETDAAP && _status != SETART)
                         _status = PLAYING;
@@ -430,7 +905,8 @@ namespace AirTunesSharp.Network
                         _passwordTried = false;
                         _status = OPTIONS2;
                     } else {
-                        _status = ANNOUNCE;
+                        _status = (_session != null) ? PLAYING : (this.airplay2 ? PAIR_PIN_START : ANNOUNCE);
+                        if (_status == ANNOUNCE) { Emit("pair_success"); };
                     }
                     break;  
                 case OPTIONS2:
@@ -545,16 +1021,17 @@ namespace AirTunesSharp.Network
         /// <param name="uri">Request URI</param>
         /// <param name="digestInfo">Optional digest authentication info</param>
         /// <returns>RTSP header string</returns>
-        private string MakeHead(string method, string uri, Dictionary<string, string>? digestInfo = null, bool md5Uppercase = true)
+        private string MakeHead(string method, string uri, Dictionary<string, string>? digestInfo = null, bool md5Uppercase = true, bool clear = false)
         {
-            string head = $"{method} {uri} RTSP/1.0\r\n" +
-                $"CSeq: {NextCSeq()}\r\n" +
+            string head = $"{method} {uri} RTSP/1.0\r\n";
+            if (!clear) {
+              head +=  $"CSeq: {NextCSeq()}\r\n" +
                 $"User-Agent: {Config.UserAgent}\r\n" +
                 $"DACP-ID: {_dacpId.ToUpper()}\r\n" +
                 $"Client-Instance: {_dacpId.ToUpper()}\r\n" +
                 (_session != null ? $"Session: {_session}\r\n" : "") +
                 $"Active-Remote: {_activeRemote}\r\n";
-
+            }
             if (digestInfo != null || _digestInfo != null)
             {
                 if (digestInfo == null)
@@ -678,247 +1155,350 @@ namespace AirTunesSharp.Network
 
             switch (forcedStatus ?? _status)
             {
-                //  case PAIR_PIN_START:
-                //     I = "366B4165DD64AD3A";
-                //     P = null;
-                //     s = null;
-                //     B = null;
-                //     a = null;
-                //     A = null;
-                //     M1 = null;
-                //     epk = null;
-                //     authTag = null;
-                //     _atv_salt = null;
-                //     _atv_pub_key = null;
-                //     _hap_encrypteddata = null;
-                //     seed = null;
-                //     pairingId = Guid.NewGuid().ToString();
-                //     credentials = null;
-                //     verifier_hap_1 = null;
-                //     encryptionKey = null;
-                //     if (needPin ||airplay2)
-                //     {
-                //         request = request.Concat(this.makeHead("POST", "/pair-pin-start", null, true)).ToArray();
-                //         if (airplay2)
-                //         {
+                case PAIR_PIN_START:
+                    I = "366B4165DD64AD3A";
+                    P = null;
+                    s = null;
+                    B = null;
+                    a = null;
+                    A = null;
+                    M1 = null;
+                    epk = null;
+                    authTag = null;
+                    _atv_salt = null;
+                    _atv_pub_key = null;
+                    _hap_encrypteddata = null;
+                    seed = null;
+                    pairingId = Guid.NewGuid().ToString();
+                    credentials = null;
+                    verifier_hap_1 = null;
+                    encryptionKey = null;
+                    if (needPin ||airplay2)
+                    {
+                        request = MakeHead("POST", "/pair-pin-start", null, clear: true);
+                        if (airplay2)
+                        {
 
-                //             u += "User-Agent: AirPlay/409.16\r\n";
-                //             u += "Connection: keep-alive\r\n";
-                //             u += "CSeq: " + "0" + "\r\n";
+                            request += "User-Agent: AirPlay/409.16\r\n";
+                            request += "Connection: keep-alive\r\n";
+                            request += "CSeq: " + "0" + "\r\n";
 
-                //         }
-                //         u += "Content-Length:" + 0 + "\r\n\r\n";
-                //         request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray();
-                //     } else
-                //     {
-                //         emitNeedPassword?.Invoke();
-                //         this.status = this.airplay2 ? INFO : PAIR_PIN_SETUP_1;
-                //     }
-                //     break;
-                // case PAIR_PIN_SETUP_1:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup-pin", null, true)).ToArray();
-                //     u += "Content-Type: application/x-apple-binary-plist\r\n";
+                        }
+                        request += "Content-Length:" + 0 + "\r\n\r\n";
+                        
+                    } else
+                    {
+                        Emit("need_password");
+                        _status = airplay2 ? INFO : PAIR_PIN_SETUP_1;
+                    }
+                    break;
+                case PAIR_PIN_SETUP_1:
+                    request = MakeHead("POST", "/pair-setup-pin", null, clear: true);
+                    request += "Content-Type: application/x-apple-binary-plist\r\n";
 
-                //     using (var memoryStream = new MemoryStream())
-                //     {
-                //         BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
-                //         NSDictionary dict = new NSDictionary();
-                //         dict.Add("user", "366B4165DD64AD3A");
-                //         dict.Add("method", "pin");
-                //         bplist.Write(dict);
-                //         byte[] bpbuf = memoryStream.ToArray();
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
+                        NSDictionary dict = new NSDictionary();
+                        dict.Add("user", "366B4165DD64AD3A");
+                        dict.Add("method", "pin");
+                        bplist.Write(dict);
+                        byte[] bpbuf = memoryStream.ToArray();
+                        body = bpbuf;
 
-                //         u += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
-                //         request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(bpbuf).ToArray();
-                //     };
+                        request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
+                    };
 
-                //     break;
-                // case PAIR_PIN_SETUP_2:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup-pin", null, true)).ToArray();
-                //     u += "Content-Type: application/x-apple-binary-plist\r\n";
-                //     using (var memoryStream = new MemoryStream())
-                //     {
-                //         BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
-                //         NSDictionary dict = new NSDictionary();
-                //         dict.Add("pk", new NSData(this.A));
-                //         dict.Add("proof", new NSData(this.M1));
-                //         bplist.Write(dict);
-                //         byte[] bpbuf = memoryStream.ToArray();
+                    break;
+                case PAIR_PIN_SETUP_2:
+                    request = MakeHead("POST", "/pair-setup-pin", null, clear: true);
+                    request += "Content-Type: application/x-apple-binary-plist\r\n";
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
+                        NSDictionary dict = new NSDictionary();
+                        dict.Add("pk", new NSData(A));
+                        dict.Add("proof", new NSData(M1));
+                        bplist.Write(dict);
+                        byte[] bpbuf = memoryStream.ToArray();
+                        body = bpbuf;
 
-                //         u += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
-                //         request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(bpbuf).ToArray();
-                //     };
-                //     break;
-                // case PAIR_PIN_SETUP_3:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup-pin", null, true)).ToArray();
-                //     u += "Content-Type: application/x-apple-binary-plist\r\n";
-                //     using (var memoryStream = new MemoryStream())
-                //     {
-                //         BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
-                //         NSDictionary dict = new NSDictionary();
-                //         dict.Add("epk", new NSData(this.epk));
-                //         dict.Add("authTag", new NSData(this.authTag));
-                //         bplist.Write(dict);
-                //         byte[] bpbuf = memoryStream.ToArray();
+                        request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
+                    };
+                    break;
+                case PAIR_PIN_SETUP_3:
+                    request = MakeHead("POST", "/pair-setup-pin", null, clear: true);
+                    request += "Content-Type: application/x-apple-binary-plist\r\n";
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
+                        NSDictionary dict = new NSDictionary();
+                        dict.Add("epk", new NSData(epk));
+                        dict.Add("authTag", new NSData(authTag));
+                        bplist.Write(dict);
+                        byte[] bpbuf = memoryStream.ToArray();
+                        body = bpbuf;
 
-                //         u += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
-                //         request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(bpbuf).ToArray();
-                //     };
-                //     break;
-                // case PAIR_VERIFY_1:
-                //     request = request.Concat(this.makeHead("POST", "/pair-verify", null, true)).ToArray();
-                //     u += "Content-Type: application/octet-stream\r\n";
-                //     this.pair_verify_1_verifier = LegacyATVVerifier.verifier(this.authSecret);
-                //     u += "Content-Length:" + this.pair_verify_1_verifier["verifierBody"].Length + "\r\n\r\n";
+                        request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
+                    };
+                    break;
+                case PAIR_VERIFY_1:
+                    request = MakeHead("POST", "/pair-verify", null, clear: true);
+                    request += "Content-Type: application/octet-stream\r\n";
+                    pair_verify_1_verifier = LegacyATVVerifier.verifier(authSecret);
+                    request += "Content-Length:" + pair_verify_1_verifier["verifierBody"].Length + "\r\n\r\n";
+                    body = Convert.FromHexString(pair_verify_1_verifier["verifierBody"]);
+        
+                    break;
+                case PAIR_VERIFY_2:
+                    request = MakeHead("POST", "/pair-verify", null, clear: true);
+                    request += "Content-Type: application/octet-stream\r\n";
+                    request += "Content-Length:" + pair_verify_1_signature.Length + "\r\n\r\n";
+                    body = pair_verify_1_signature;
 
-                //     request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(Convert.FromHexString(this.pair_verify_1_verifier["verifierBody"])).ToArray();
-                //     break;
-                // case PAIR_VERIFY_2:
-                //     request = request.Concat(this.makeHead("POST", "/pair-verify", null, true)).ToArray();
-                //     u += "Content-Type: application/octet-stream\r\n";
-                //     u += "Content-Length:" + this.pair_verify_1_signature.Length + "\r\n\r\n";
+                    break;
+                case PAIR_SETUP_1:
+                    request = MakeHead("POST", "/pair-setup", null, clear: true);
+                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "CSeq: " + NextCSeq() + "\r\n";
+                    request += "Connection: keep-alive\r\n";
+                    request += "X-Apple-HKP: " + homekitver + "\r\n";
+                    if (transient == true)
+                    {
+                        Dictionary<byte, byte[]> dic1 = new Dictionary<byte, byte[]>();
+                        dic1.Add(TlvTag.Sequence, new byte[] { 0x01 });
+                        dic1.Add(TlvTag.PairingMethod, new byte[] { 0x00 });
+                        dic1.Add(TlvTag.Flags, new byte[] { 0x00000010 });
+                        byte[] ps1x = Tlv.Encode(dic1);
+                        body = ps1x;
 
-                //     request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(this.pair_verify_1_signature).ToArray();
-                //     break;
-                // case PAIR_SETUP_1:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup", null, true)).ToArray();
-                //     u += "User-Agent: AirPlay/409.16\r\n";
-                //     u += "CSeq: " + this.nextCSeq() + "\r\n";
-                //     u += "Connection: keep-alive\r\n";
-                //     u += "X-Apple-HKP: " + this.homekitver + "\r\n";
-                //     if (this.transient == true)
-                //     {
-                //         Dictionary<byte, byte[]> dic1 = new Dictionary<byte, byte[]>();
-                //         dic1.Add(TlvTag.Sequence, new byte[] { 0x01 });
-                //         dic1.Add(TlvTag.PairingMethod, new byte[] { 0x00 });
-                //         dic1.Add(TlvTag.Flags, new byte[] { 0x00000010 });
-                //         byte[] ps1x = Tlv.Encode(dic1);
+                        request += "Content-Length: " + ps1x.Length + "\r\n";
+                        request += "Content-Type: application/octet-stream" + "\r\n\r\n";
+                    }
+                    else
+                    {
+                        Dictionary<byte, byte[]> dic2 = new Dictionary<byte, byte[]>();
+                        dic2.Add(TlvTag.PairingMethod, new byte[] { 0x00 });
+                        dic2.Add(TlvTag.Sequence, new byte[] { 0x01 });
+                        byte[] ps2x = Tlv.Encode(dic2);
+                        body = ps2x;
+                        request += "Content-Length: " + ps2x.Length + "\r\n";
+                        request += "Content-Type: application/octet-stream" + "\r\n\r\n";
+                    }
+                    break;
+                case PAIR_SETUP_2:
+                    request = MakeHead("POST", "/pair-setup", null, clear: true);
+                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "CSeq: " + NextCSeq() + "\r\n";
+                    request += "Connection: keep-alive\r\n";
+                    request += "X-Apple-HKP: " + homekitver + "\r\n";
+                    request += "Content-Type: application/octet-stream\r\n";
 
-                //         u += "Content-Length: " + ps1x.Length + "\r\n";
-                //         u += "Content-Type: application/octet-stream" + "\r\n\r\n";
-                //         request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(ps1x).ToArray();
-                //     }
-                //     else
-                //     {
-                //         Dictionary<byte, byte[]> dic2 = new Dictionary<byte, byte[]>();
-                //         dic2.Add(TlvTag.PairingMethod, new byte[] { 0x00 });
-                //         dic2.Add(TlvTag.Sequence, new byte[] { 0x01 });
-                //         byte[] ps2x = Tlv.Encode(dic2);
-                //         u += "Content-Length: " + ps2x.Length + "\r\n";
-                //         u += "Content-Type: application/octet-stream" + "\r\n\r\n";
-                //         request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(ps2x).ToArray();
-                //     }
-                //     break;
-                // case PAIR_SETUP_2:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup", null, true)).ToArray();
-                //     u += "User-Agent: AirPlay/409.16\r\n";
-                //     u += "CSeq: " + this.nextCSeq() + "\r\n";
-                //     u += "Connection: keep-alive\r\n";
-                //     u += "X-Apple-HKP: " + this.homekitver + "\r\n";
-                //     u += "Content-Type: application/octet-stream\r\n";
-                //     var dic = new Dictionary<byte, byte[]>();
-                //     dic.Add(TlvTag.Sequence, new byte[] { 0x03 });
-                //     dic.Add(TlvTag.PublicKey, Convert.FromHexString(this.A));
-                //     dic.Add(TlvTag.Proof, Convert.FromHexString(this.M1));
-                //     var ps2 = Tlv.Encode(dic);
-                //     u += "Content-Length: " + ps2.Length + "\r\n\r\n";
-                //     request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(ps2).ToArray();
-                //     break;
-                // case PAIR_SETUP_3:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup", null, true)).ToArray();
-                //     u += "User-Agent: AirPlay/409.16\r\n";
-                //     u += "CSeq: " + this.nextCSeq() + "\r\n";
-                //     u += "Connection: keep-alive\r\n";
-                //     u += "X-Apple-HKP: " + this.homekitver + "\r\n";
-                //     u += "Content-Type: application/octet-stream\r\n";
-                //     this.K = Convert.FromHexString(this.srp.DeriveSession(this._hap_genkey, this._atv_pub_key, this._atv_salt, "Pair-Setup", this.srp.DerivePrivateKey(this._atv_salt, "Pair-Setup", this.password)).Key);
-                //     this.seed = new byte[32];
-                //     RandomNumberGenerator rng = RandomNumberGenerator.Create();
-                //     rng.GetBytes(this.seed);
-                //     var ed = new Ed25519();
-                //     ed.FromSeed(this.seed);
-                //     byte[] publicKey = ed.GetPublicKey();
-                //     byte[] deviceHash = Encryption.HKDF(
-                //         Encoding.ASCII.GetBytes("Pair-Setup-Controller-Sign-Salt"),
-                //         this.K,
-                //         Encoding.ASCII.GetBytes("Pair-Setup-Controller-Sign-Info"),
-                //         32
-                //     );
-                //     byte[] deviceInfo = deviceHash.Concat(Encoding.ASCII.GetBytes(this.pairingId)).Concat(publicKey).ToArray();
-                //     byte[] deviceSignature = ed.SignMessage(deviceInfo);
-                //     // let deviceSignature = nacl.sign(deviceInfo, privateKey)
-                //     this.encryptionKey = Encryption.HKDF(
-                //         Encoding.ASCII.GetBytes("Pair-Setup-Encrypt-Salt"),
-                //         this.K,
-                //         Encoding.ASCII.GetBytes("Pair-Setup-Encrypt-Info"),
-                //         32
-                //     );
-                //     Dictionary<byte, byte[]> dic3a = new Dictionary<byte, byte[]>();
-                //     dic3a.Add(TlvTag.Username, Encoding.ASCII.GetBytes(this.pairingId));
-                //     dic3a.Add(TlvTag.PublicKey, publicKey);
-                //     dic3a.Add(TlvTag.Signature, deviceSignature);
-                //     byte[] ps3xa = Tlv.Encode(dic3a);
-                //     (byte[] encryptedTLV, byte[] encryptedTLVhmac) = Encryption.EncryptAndSeal(ps3xa, null, Encoding.ASCII.GetBytes("PS-Msg05"), this.encryptionKey);
-                //     Dictionary<byte, byte[]> dic3b = new Dictionary<byte, byte[]>();
-                //     dic3b.Add(TlvTag.Sequence, new byte[] { 0x05 });
-                //     dic3b.Add(TlvTag.EncryptedData, encryptedTLV.Concat(encryptedTLVhmac).ToArray());
-                //     byte[] ps3xb = Tlv.Encode(dic3b);
-                //     u += "Content-Length: " + ps3xb.Length + "\r\n\r\n";
-                //     request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(ps3xb).ToArray();
-                //     break;
-                // case PAIR_VERIFY_HAP_1:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup", null, true)).ToArray();
-                //     u += "User-Agent: AirPlay/409.16\r\n";
-                //     u += "CSeq: " + this.nextCSeq() + "\r\n";
-                //     u += "Connection: keep-alive\r\n";
-                //     u += "X-Apple-HKP: " + this.homekitver + "\r\n";
-                //     u += "Content-Type: application/octet-stream\r\n";
-                //     var curve = new Curve25519();
-                //     curve.FromPrivateKey(this.seed);
-                //     this.verifyPrivate = curve.GetPrivateKey();
-                //     this.verifyPublic = curve.GetPrivateKey();
-                //     Dictionary<byte, byte[]> dic4 = new Dictionary<byte, byte[]>();
-                //     dic4.Add(TlvTag.Sequence, new byte[] { 0x01 });
-                //     dic4.Add(TlvTag.PublicKey, this.verifyPublic);
-                //     byte[] ps4 = Tlv.Encode(dic4);
-                //     u += "Content-Length: " + ps4.Length + "\r\n\r\n";
-                //     request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(ps4).ToArray();
-                //     break;
-                // case PAIR_VERIFY_HAP_2:
-                //     request = request.Concat(this.makeHead("POST", "/pair-setup", null, true)).ToArray();
-                //     u += "User-Agent: AirPlay/409.16\r\n";
-                //     u += "CSeq: " + this.nextCSeq() + "\r\n";
-                //     u += "Connection: keep-alive\r\n";
-                //     u += "X-Apple-HKP: " + this.homekitver + "\r\n";
-                //     u += "Content-Type: application/octet-stream\r\n";
-                //     //byte[] identifier = Tlv.Decode(this.verifier_hap_1["pairingData"])[TlvTag.Username];
-                //     //byte[] signature = Tlv.Decode(this.verifier_hap_1["pairingData"])[TlvTag.Signature];
-                //     byte[] material = this.verifyPublic.Concat(Encoding.ASCII.GetBytes(this.credentials.pairingId)).Concat(this.verifier_hap_1["sessionPublicKey"]).ToArray();
-                //     var ed2 = new Ed25519();
-                //     ed2.FromPrivateKey(this.privateKey);
-                //     byte[] signed = ed2.SignMessage(material);
-                //     Dictionary<byte, byte[]> dic5a = new Dictionary<byte, byte[]>();
-                //     dic5a.Add(TlvTag.Username, Encoding.ASCII.GetBytes(this.pairingId));
-                //     dic5a.Add(TlvTag.Signature, signed);
-                //     byte[] ps5a = Tlv.Encode(dic5a);
-                //     (byte[] encryptedTLV1, byte[] encryptedTLV1Hmac) = Encryption.EncryptAndSeal(ps5a, null, Encoding.ASCII.GetBytes("PV-Msg03"), this.verifier_hap_1["encryptionKey"]);
-                //     Dictionary<byte, byte[]> dic5b = new Dictionary<byte, byte[]>();
-                //     dic5b.Add(TlvTag.Sequence, new byte[] { 0x03 });
-                //     dic5b.Add(TlvTag.EncryptedData, encryptedTLV1.Concat(encryptedTLV1Hmac).ToArray());
-                //     byte[] ps5b = Tlv.Encode(dic5b);
-                //     u += "Content-Length: " + ps5b.Length + "\r\n\r\n";
-                //     request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(ps5b).ToArray();
-                //     break;
-                // case AUTH_SETUP:
-                //     request = request.Concat(this.makeHead("POST", "/auth-setup", di)).ToArray();
-                //     u += "Content-Length:" + "33" + "\r\n\r\n";
-                //     byte[] auth_fakekey_buf = new byte[] {0x01, // unencrypted
-                //             0x59, 0x02, 0xed, 0xe9, 0x0d, 0x4e, 0xf2, 0xbd, // static Curve 25519 key
-                //             0x4c, 0xb6, 0x8a, 0x63, 0x30, 0x03, 0x82, 0x07,
-                //             0xa9, 0x4d, 0xbd, 0x50, 0xd8, 0xaa, 0x46, 0x5b,
-                //             0x5d, 0x8c, 0x01, 0x2a, 0x0c, 0x7e, 0x1d, 0x4e};
-                //     request = request.Concat(Encoding.UTF8.GetBytes(u)).ToArray().Concat(auth_fakekey_buf).ToArray();
-                //     break;
+                    var dic = new Dictionary<byte, byte[]>();
+                    dic.Add(TlvTag.Sequence, new byte[] { 0x03 });
+                    dic.Add(TlvTag.PublicKey, Convert.FromHexString(this.A));
+                    dic.Add(TlvTag.Proof, Convert.FromHexString(this.M1));
+                    var ps2 = Tlv.Encode(dic);
+                    body = ps2;
+
+                    request += "Content-Length: " + ps2.Length + "\r\n\r\n";
+
+                    break;
+                case PAIR_SETUP_3:
+                    request = MakeHead("POST", "/pair-setup", null, clear: true);
+                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "CSeq: " + NextCSeq() + "\r\n";
+                    request += "Connection: keep-alive\r\n";
+                    request += "X-Apple-HKP: " + this.homekitver + "\r\n";
+                    request += "Content-Type: application/octet-stream\r\n";
+                    K = Convert.FromHexString(srp.DeriveSession(_hap_genkey, 
+                                                                _atv_pub_key, 
+                                                                _atv_salt, 
+                                                                "Pair-Setup", 
+                                                                srp.DerivePrivateKey(_atv_salt, 
+                                                                                          "Pair-Setup", 
+                                                                                          _password)).Key);
+                    seed = new byte[32];
+                    RandomNumberGenerator rng = RandomNumberGenerator.Create();
+                    rng.GetBytes(this.seed);
+                    var ed = new Ed25519();
+                    ed.FromSeed(this.seed);
+                    byte[] publicKey = ed.GetPublicKey();
+                    byte[] deviceHash = Encryption.HKDF(
+                        Encoding.ASCII.GetBytes("Pair-Setup-Controller-Sign-Salt"),
+                        this.K,
+                        Encoding.ASCII.GetBytes("Pair-Setup-Controller-Sign-Info"),
+                        32
+                    );
+                    byte[] deviceInfo = deviceHash.Concat(Encoding.ASCII.GetBytes(pairingId)).Concat(publicKey).ToArray();
+                    byte[] deviceSignature = ed.SignMessage(deviceInfo);
+                    // let deviceSignature = nacl.sign(deviceInfo, privateKey)
+                    this.encryptionKey = Encryption.HKDF(
+                        Encoding.ASCII.GetBytes("Pair-Setup-Encrypt-Salt"),
+                        this.K,
+                        Encoding.ASCII.GetBytes("Pair-Setup-Encrypt-Info"),
+                        32
+                    );
+                    Dictionary<byte, byte[]> dic3a = new Dictionary<byte, byte[]>();
+                    dic3a.Add(TlvTag.Username, Encoding.ASCII.GetBytes(pairingId));
+                    dic3a.Add(TlvTag.PublicKey, publicKey);
+                    dic3a.Add(TlvTag.Signature, deviceSignature);
+                    byte[] ps3xa = Tlv.Encode(dic3a);
+                    (byte[] encryptedTLV, byte[] encryptedTLVhmac) = Encryption.EncryptAndSeal(ps3xa, null, Encoding.ASCII.GetBytes("PS-Msg05"), this.encryptionKey);
+                    Dictionary<byte, byte[]> dic3b = new Dictionary<byte, byte[]>();
+                    dic3b.Add(TlvTag.Sequence, new byte[] { 0x05 });
+                    dic3b.Add(TlvTag.EncryptedData, encryptedTLV.Concat(encryptedTLVhmac).ToArray());
+                    byte[] ps3xb = Tlv.Encode(dic3b);
+                    body = ps3xb;
+
+                    request += "Content-Length: " + ps3xb.Length + "\r\n\r\n";
+                    break;
+                case PAIR_VERIFY_HAP_1:
+                    request = MakeHead("POST", "/pair-verify", null, clear: true);
+                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "CSeq: " + NextCSeq() + "\r\n";
+                    request += "Connection: keep-alive\r\n";
+                    request += "X-Apple-HKP: " + this.homekitver + "\r\n";
+                    request += "Content-Type: application/octet-stream\r\n";
+                    var curve = new Curve25519();
+                    curve.FromPrivateKey(this.seed);
+                    verifyPrivate = curve.GetPrivateKey();
+                    verifyPublic = curve.GetPrivateKey();
+                    Dictionary<byte, byte[]> dic4 = new Dictionary<byte, byte[]>();
+                    dic4.Add(TlvTag.Sequence, new byte[] { 0x01 });
+                    dic4.Add(TlvTag.PublicKey, this.verifyPublic);
+                    byte[] ps4 = Tlv.Encode(dic4);
+                    body = ps4;
+                    request += "Content-Length: " + ps4.Length + "\r\n\r\n";
+
+                    break;
+                case PAIR_VERIFY_HAP_2:
+                    request = MakeHead("POST", "/pair-verify", null, clear: true);
+                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "CSeq: " + NextCSeq() + "\r\n";
+                    request += "Connection: keep-alive\r\n";
+                    request += "X-Apple-HKP: " + this.homekitver + "\r\n";
+                    request += "Content-Type: application/octet-stream\r\n";
+                    //byte[] identifier = Tlv.Decode(this.verifier_hap_1["pairingData"])[TlvTag.Username];
+                    //byte[] signature = Tlv.Decode(this.verifier_hap_1["pairingData"])[TlvTag.Signature];
+                    byte[] material = this.verifyPublic.Concat(Encoding.ASCII.GetBytes(this.credentials.pairingId)).Concat(verifier_hap_1["sessionPublicKey"]).ToArray();
+                    var ed2 = new Ed25519();
+                    ed2.FromPrivateKey(this.privateKey);
+                    byte[] signed = ed2.SignMessage(material);
+                    Dictionary<byte, byte[]> dic5a = new Dictionary<byte, byte[]>();
+                    dic5a.Add(TlvTag.Username, Encoding.ASCII.GetBytes(pairingId));
+                    dic5a.Add(TlvTag.Signature, signed);
+                    byte[] ps5a = Tlv.Encode(dic5a);
+                    (byte[] encryptedTLV1, byte[] encryptedTLV1Hmac) = Encryption.EncryptAndSeal(ps5a, null, Encoding.ASCII.GetBytes("PV-Msg03"), this.verifier_hap_1["encryptionKey"]);
+                    Dictionary<byte, byte[]> dic5b = new Dictionary<byte, byte[]>();
+                    dic5b.Add(TlvTag.Sequence, new byte[] { 0x03 });
+                    dic5b.Add(TlvTag.EncryptedData, encryptedTLV1.Concat(encryptedTLV1Hmac).ToArray());
+                    byte[] ps5b = Tlv.Encode(dic5b);
+                    body = ps5b;
+
+                    request += "Content-Length: " + ps5b.Length + "\r\n\r\n";
+
+                    break;
+                case AUTH_SETUP:
+                    request = MakeHead("POST", "/auth-setup", digestInfo);
+                    request += "Content-Length:" + "33" + "\r\n\r\n";
+                    byte[] auth_fakekey_buf = new byte[] {0x01, // unencrypted
+                            0x59, 0x02, 0xed, 0xe9, 0x0d, 0x4e, 0xf2, 0xbd, // static Curve 25519 key
+                            0x4c, 0xb6, 0x8a, 0x63, 0x30, 0x03, 0x82, 0x07,
+                            0xa9, 0x4d, 0xbd, 0x50, 0xd8, 0xaa, 0x46, 0x5b,
+                            0x5d, 0x8c, 0x01, 0x2a, 0x0c, 0x7e, 0x1d, 0x4e};
+
+                    body = auth_fakekey_buf;
+                    break;
+                case INFO:
+                    request = MakeHead("GET", "/info", digestInfo, clear: true);
+                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "Connection: keep-alive\r\n";
+                    request += "CSeq: " + NextCSeq() + "\r\n\r\n";
+
+                    break;
+                case SETUP_AP2_1:
+                    if (_announceId == null)
+                    {
+                        _announceId = Utils.NumUtil.randomInt(10).ToString();
+                    }
+                    request = MakeHeadWithURL("SETUP", digestInfo);
+                    request += "Content-Type: application/x-apple-binary-plist\r\n";
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
+                        NSDictionary dict = new NSDictionary();
+                        dict.Add("deviceID", "2C:61:F3:B6:64:C1");
+                        dict.Add("sessionUUID", "8EB266BA-B741-40C5-8213-4B7A38DF8773");
+                        dict.Add("timingPort", _timingPort);
+                        dict.Add("timingProtocol", "NTP");
+                        bplist.Write(dict);
+                        byte[] bpbuf = memoryStream.ToArray();
+                        body = bpbuf;
+
+                        request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
+
+                    };
+                    break;
+                case SETPEERS:
+                    request = MakeHeadWithURL("SETPEERS", digestInfo);
+                    request += "Content-Type: /peer-list-changed\r\n";
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
+                        NSArray dictv = new NSArray {this.hostip,((IPEndPoint)_socket?.Client.LocalEndPoint).Address.MapToIPv4().ToString()};
+                        //dictv.Insert(0,this.hostip);
+                        //dictv.Insert(1,();
+                        bplist.Write(dictv);
+                        byte[] bpbuf = memoryStream.ToArray();
+                        body = bpbuf;
+
+                        request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
+
+                    };
+                    break;
+                case FLUSH:
+                    request = MakeHeadWithURL("FLUSH", digestInfo);
+                    request += MakeRtpInfo() + "\r\n";
+
+                    break;
+                case SETUP_AP2_2:
+                    if (_announceId == null)
+                    {
+                        _announceId = Utils.NumUtil.randomInt(10).ToString();
+                    }
+                    request = MakeHeadWithURL("SETUP", digestInfo);
+                    request += "Content-Type: application/x-apple-binary-plist\r\n";
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
+                        NSDictionary streams = new NSDictionary();
+                        
+                        NSDictionary stream = new NSDictionary();
+                        stream.Add("audioFormat", 262144); // PCM/44100/16/2 262144
+                        stream.Add("audioMode", "default");
+                        stream.Add("controlPort", _controlPort);
+                        stream.Add("ct", 2);
+                        stream.Add("isMedia", true);
+                        stream.Add("latencyMax", 88200);
+                        stream.Add("latencyMin", 11025);
+                        stream.Add("shk", this.credentials.writeKey);
+                        stream.Add("spf", 352);
+                        stream.Add("sr", 44100);
+                        stream.Add("type", 0x60);
+                        stream.Add("supportsDynamicStreamID", false);
+                        stream.Add("streamConnectionID", _announceId);
+                        NSArray array = new NSArray { stream};
+                        streams.Add("streams", array);
+                        bplist.Write(streams);
+                        byte[] bpbuf = memoryStream.ToArray();
+                        body = bpbuf;
+
+                        request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
+
+                    }
+
+                    break;
                 case HEARTBEAT:
                 case OPTIONS:
                     request += MakeHead("OPTIONS", "*", digestInfo);
@@ -969,9 +1549,32 @@ namespace AirTunesSharp.Network
                     break;
 
                 case RECORD:
-                    request += MakeHeadWithURL("RECORD", digestInfo);
-                    request += MakeRtpInfo();
-                    request += "Range: npt=0-\r\n\r\n";
+
+                    if (this.airplay2 != null && this.credentials != null) {
+                        this.eventsocket = new TcpClient();
+
+                        this.eventsocket.ConnectAsync(this.hostip, (int) _eventPort);
+                        if (_announceId == null)
+                        {
+                            _announceId = Utils.NumUtil.randomInt(10).ToString();
+                        }
+                        var nextSeq = _audioOut.LastSeq + 10;
+                        var rtpSyncTime = nextSeq * 352 + 2 * 44100;
+                        request = MakeHead("RECORD", "rtsp://" + ((IPEndPoint)_socket?.Client.LocalEndPoint).Address.MapToIPv4().ToString() + "/" + _announceId, digestInfo, clear: true);
+                        request += "CSeq: " + ++_cseq + "\r\n";
+                        request += "User-Agent: AirPlay/409.16" + "\r\n";
+                        request += "Client-Instance: " + _dacpId + "\r\n";
+                        request += "DACP-ID: " + _dacpId + "\r\n";
+                        request += "Active-Remote: " + _activeRemote + "\r\n";
+                        request += "X-Apple-ProtocolVersion: 1\r\n";
+                        request += "Range: npt=0-\r\n";
+                        request += MakeRtpInfo() + "\r\n";
+
+                    } else {
+                        request += MakeHeadWithURL("RECORD", digestInfo);
+                        request += MakeRtpInfo();
+                        request += "Range: npt=0-\r\n\r\n";
+                    }
                     break;
 
                 case SETVOLUME:
@@ -1033,6 +1636,10 @@ namespace AirTunesSharp.Network
                 try
                 {
                     byte[] requestBytes = Encoding.UTF8.GetBytes(request).Concat(body).ToArray();
+                    if (this.encryptedChannel && this.credentials != null)
+                    {
+                        requestBytes = this.credentials.encrypt(requestBytes);
+                    }
                     NetworkStream stream = _socket.GetStream();
                     stream.Write(requestBytes, 0, requestBytes.Length);
                     StartTimeout();

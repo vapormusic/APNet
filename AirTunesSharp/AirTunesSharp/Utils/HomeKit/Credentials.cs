@@ -69,7 +69,8 @@ namespace AirTunesSharp.Utils.HomeKit
             int offset = 0;
             byte[] result = new byte[0];
             while (offset < message.Length)
-            {
+            {   
+                // try {
                 byte[] lengthbytes = message.Skip(offset).Take(2).ToArray();
                 int length = BitConverter.ToUInt16(lengthbytes, 0);
                 byte[] messagea = message.Skip(offset + 2).Take(length + 16).ToArray();
@@ -79,14 +80,17 @@ namespace AirTunesSharp.Utils.HomeKit
                 this.decryptCount += 1;
                 offset = offset + length + 16 + 2;
                 result = result.Concat(decrypted).ToArray();
+                // } catch (Exception e) {
+                //     // Console.WriteLine(e);
+                //     break;
+                // }
             }
             return result;
         }
-        public byte[] EncryptAudio(byte[] message, byte[] aad) {
-            (byte[] ct, byte[] tag) = Encryption.EncryptAndSeal(message, aad, (new byte[] { 0x00, 0x00, 0x00, 0x00 }).Concat(BitConverter.GetBytes(Convert.ToUInt64(0))).ToArray(), this.writeKey);
-            byte[] result = new byte[ct.Length + 24];
-            ct.CopyTo(result, 0);
-            tag.CopyTo(result, ct.Length);
+        public byte[] EncryptAudio(byte[] message, byte[] aad, int nonce) {
+            (byte[] ct, byte[] tag) = Encryption.EncryptAndSeal(message, aad, (new byte[] { 0x00, 0x00, 0x00, 0x00 }).Concat(BitConverter.GetBytes(Convert.ToUInt64(nonce))).ToArray(), this.writeKey);
+            byte[] result = ct.Concat(tag).ToArray();
+            result = result.Concat(BitConverter.GetBytes(Convert.ToUInt64(nonce))).ToArray();
             return result;
         }
     }    

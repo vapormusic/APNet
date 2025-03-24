@@ -61,19 +61,20 @@ namespace AirTunesSharp.Utils
 
         private void onServiceChanged(object sender, ServiceAnnouncementEventArgs e)
         {
-           printService('~', e.Announcement);
+        //    printService('~', e.Announcement);
         }
 
         private void onServiceRemoved(object sender, ServiceAnnouncementEventArgs e)
         {
-            printService('-', e.Announcement);
+            // printService('-', e.Announcement);
         }
 
         private void onServiceAdded(object sender, ServiceAnnouncementEventArgs e)
         {
-            printService('+', e.Announcement);
+            // printService('+', e.Announcement);
             devices.Add(new Dictionary<String, dynamic>()
             {
+                { "key" , e.Announcement.Addresses[0].ToString()+ ":" + e.Announcement.Port.ToString() },
                 { "name", e.Announcement.Instance },
                 { "host", e.Announcement.Addresses[0].ToString() },
                 { "port", e.Announcement.Port.ToString() },
@@ -131,19 +132,7 @@ namespace AirTunesSharp.Utils
             needPin = false;
             Console.WriteLine("txt: " + txt.ToString());
 
-            if (statusflags != null && statusflags.Length > 0)
-            {
-                bool PasswordRequired = false;
-                bool PinRequired = false;
-                bool OneTimePairingRequired = false;
-                if (statusflags.Length > 7) PasswordRequired = (statusflags[statusflags.Length - 1 - 7] == "1");
-                if (statusflags.Length > 3) PinRequired = (statusflags[statusflags.Length - 1 - 3] == "1");
-                if (statusflags.Length > 9) OneTimePairingRequired = (statusflags[statusflags.Length - 1 - 9] == "1");
-                // Debug.WriteLine("needPss", PasswordRequired, PinRequired, OneTimePairingRequired);
-                needPassword = (PasswordRequired || PinRequired || OneTimePairingRequired);
-                needPin = (PinRequired || OneTimePairingRequired);
-                // Debug.WriteLine("needPss", needPassword);
-            }
+
 
             transient = false;
             var ft = txt.Where(x => x.StartsWith("features=") || x.StartsWith("ft=")).FirstOrDefault();
@@ -166,6 +155,21 @@ namespace AirTunesSharp.Utils
                 features = binary_set1.Concat(binary_set2).ToArray();
                 if (features.Length > 48)
                 { transient = (features[features.Length - 1 - 48] == "1");}
+            }
+
+            if (statusflags != null && statusflags.Length > 0)
+            {
+                bool PasswordRequired = false;
+                bool PinRequired = false;
+                bool OneTimePairingRequired = false;
+                if (statusflags.Length > 7) PasswordRequired = (statusflags[statusflags.Length - 1 - 7] == "1");
+                if (statusflags.Length > 3) PinRequired = (statusflags[statusflags.Length - 1 - 3] == "1");
+                if (statusflags.Length > 9) OneTimePairingRequired = (statusflags[statusflags.Length - 1 - 9] == "1");
+                // Debug.WriteLine("needPss", PasswordRequired, PinRequired, OneTimePairingRequired);
+                needPassword = (PasswordRequired || PinRequired || OneTimePairingRequired);
+                needPin = (PinRequired || OneTimePairingRequired);
+                transient = (!(PasswordRequired || PinRequired || OneTimePairingRequired));
+                // Debug.WriteLine("needPss", needPassword);
             }
 
             var k = txt.Where(u => u.StartsWith("am=")).ToList();
@@ -230,6 +234,8 @@ namespace AirTunesSharp.Utils
                 { "transient", transient },
                 { "features", features },
                 { "statusflags", statusflags },
+                { "airplay2", airplay2 },
+                { "debug", true },
                 { "txt", txt }
             };
 
