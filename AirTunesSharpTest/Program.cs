@@ -40,6 +40,17 @@ namespace AirTunesSharpTest
                     string desc = eventArgs.Length > 2 ? eventArgs[2]?.ToString() : null;
 
                     Console.WriteLine($"Device event: {key} - {status} {(desc != null ? $"({desc})" : "")}");
+                    if (status == "need_password")
+                    {
+                        Console.WriteLine("Device requires password or pin, please enter : (Default is 3939)");
+                        var code = Console.ReadLine();
+                        if (string.IsNullOrEmpty(code))
+                        {
+                            code = "3939";
+                        }
+                        airTunes.SetPasscode(key, code);
+                    }
+
                 });
 
                 airTunes.On("buffer", (eventArgs) =>

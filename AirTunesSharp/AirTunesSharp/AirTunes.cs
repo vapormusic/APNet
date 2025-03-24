@@ -125,6 +125,18 @@ namespace AirTunesSharp
         }
 
         /// <summary>
+        /// Sets the passcode for a device
+        /// </summary>
+        /// <param name="deviceKey">Device key</param>
+        /// <param name="passcode">Passcode</param>
+        public void SetPasscode(string deviceKey, string passcode)
+        {
+            _devices.SetPasscode(deviceKey, passcode);
+        }
+
+
+
+        /// <summary>
         /// Writes audio data to the buffer
         /// </summary>
         /// <param name="data">Audio data</param>
