@@ -1273,7 +1273,7 @@ namespace AirTunesSharp.Network
                         if (airplay2)
                         {
 
-                            request += "User-Agent: AirPlay/409.16\r\n";
+                            request += "User-Agent: AirPlay/490.16\r\n";
                             request += "Connection: keep-alive\r\n";
                             request += "CSeq: " + "0" + "\r\n";
 
@@ -1358,7 +1358,7 @@ namespace AirTunesSharp.Network
                     break;
                 case PAIR_SETUP_1:
                     request = MakeHead("POST", "/pair-setup", null, clear: true);
-                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "User-Agent: AirPlay/490.16\r\n";
                     request += "CSeq: " + NextCSeq() + "\r\n";
                     request += "Connection: keep-alive\r\n";
                     request += "X-Apple-HKP: " + homekitver + "\r\n";
@@ -1387,7 +1387,7 @@ namespace AirTunesSharp.Network
                     break;
                 case PAIR_SETUP_2:
                     request = MakeHead("POST", "/pair-setup", null, clear: true);
-                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "User-Agent: AirPlay/490.16\r\n";
                     request += "CSeq: " + NextCSeq() + "\r\n";
                     request += "Connection: keep-alive\r\n";
                     request += "X-Apple-HKP: " + homekitver + "\r\n";
@@ -1405,7 +1405,7 @@ namespace AirTunesSharp.Network
                     break;
                 case PAIR_SETUP_3:
                     request = MakeHead("POST", "/pair-setup", null, clear: true);
-                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "User-Agent: AirPlay/490.16\r\n";
                     request += "CSeq: " + NextCSeq() + "\r\n";
                     request += "Connection: keep-alive\r\n";
                     request += "X-Apple-HKP: " + this.homekitver + "\r\n";
@@ -1454,7 +1454,7 @@ namespace AirTunesSharp.Network
                     break;
                 case PAIR_VERIFY_HAP_1:
                     request = MakeHead("POST", "/pair-verify", null, clear: true);
-                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "User-Agent: AirPlay/490.16\r\n";
                     request += "CSeq: " + NextCSeq() + "\r\n";
                     request += "Connection: keep-alive\r\n";
                     request += "X-Apple-HKP: " + this.homekitver + "\r\n";
@@ -1473,7 +1473,7 @@ namespace AirTunesSharp.Network
                     break;
                 case PAIR_VERIFY_HAP_2:
                     request = MakeHead("POST", "/pair-verify", null, clear: true);
-                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "User-Agent: AirPlay/490.16\r\n";
                     request += "CSeq: " + NextCSeq() + "\r\n";
                     request += "Connection: keep-alive\r\n";
                     request += "X-Apple-HKP: " + this.homekitver + "\r\n";
@@ -1511,7 +1511,7 @@ namespace AirTunesSharp.Network
                     break;
                 case INFO:
                     request = MakeHead("GET", "/info", digestInfo, clear: true);
-                    request += "User-Agent: AirPlay/409.16\r\n";
+                    request += "User-Agent: AirPlay/490.16\r\n";
                     request += "Connection: keep-alive\r\n";
                     request += "CSeq: " + NextCSeq() + "\r\n\r\n";
 
@@ -1661,7 +1661,7 @@ namespace AirTunesSharp.Network
                         var rtpSyncTime = nextSeq * 352 + 2 * 44100;
                         request = MakeHead("RECORD", "rtsp://" + ((IPEndPoint)_socket?.Client.LocalEndPoint).Address.MapToIPv4().ToString() + "/" + _announceId, digestInfo, clear: true);
                         request += "CSeq: " + ++_cseq + "\r\n";
-                        request += "User-Agent: AirPlay/409.16" + "\r\n";
+                        request += "User-Agent: AirPlay/490.16" + "\r\n";
                         request += "Client-Instance: " + _dacpId + "\r\n";
                         request += "DACP-ID: " + _dacpId + "\r\n";
                         request += "Active-Remote: " + _activeRemote + "\r\n";

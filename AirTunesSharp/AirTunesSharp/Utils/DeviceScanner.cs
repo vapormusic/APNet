@@ -88,7 +88,8 @@ namespace AirTunesSharp.Utils
             // printService('+', e.Announcement);
             // check if device already exists in list
             string key = e.Announcement.Addresses[0].ToString() + ":" + e.Announcement.Port.ToString();
-            if (!devices.Exists(x => ((Dictionary<String, dynamic>)x).GetValueOrDefault("key", "") == key))
+            if (!devices.Exists(x => ((x.GetValueOrDefault("key", "") == key) && ((x.GetValueOrDefault("type", "") == e.Announcement.Type) || x.GetValueOrDefault("type", "").Contains("airplay") ) ))
+            )
             {
                 devices = devices.Append(new Dictionary<String, dynamic>()
                 {
@@ -178,6 +179,8 @@ namespace AirTunesSharp.Utils
                 
                 if (features.Length > 48)
                 { transient = (features[features.Length - 1 - 48] == "1");}
+                if (features.Length > 46)
+                { airplay2 = (features[features.Length - 1 - 46] == "1");}
             }
 
             if (statusflags != null && statusflags.Length > 0)
@@ -204,15 +207,15 @@ namespace AirTunesSharp.Utils
                 airplay2 = false;
             }
 
-            // Filter for records starting with "rmodel="
-            k = txt.Where(u => u.StartsWith("rmodel=")).ToList();
-            firstK = k.FirstOrDefault() ?? "";
-            if (firstK.Contains("AppleTV3,1") || firstK.Contains("AirReceiver3,1") ||
-                firstK.Contains("AirRecever3,1") || firstK.Contains("Shairport"))
-            {
-                alacEncoding = true;
-                airplay2 = false;
-            }
+            // // Filter for records starting with "rmodel="
+            // k = txt.Where(u => u.StartsWith("rmodel=")).ToList();
+            // firstK = k.FirstOrDefault() ?? "";
+            // if (firstK.Contains("AppleTV3,1") || firstK.Contains("AirReceiver3,1") ||
+            //     firstK.Contains("AirRecever3,1") || firstK.Contains("Shairport"))
+            // {
+            //     alacEncoding = true;
+            //     airplay2 = false;
+            // }
 
             // Filter for records starting with "manufacturer="
             var manufacturer = txt.Where(u => u.StartsWith("manufacturer=")).ToList();

@@ -9,7 +9,7 @@ namespace AirTunesSharp
     /// </summary>
     public static class Config
     {
-        public static string UserAgent { get; set; } = "Radioline/1.4.0";
+        public static string UserAgent { get; set; } = "AirPlay/490.16";
         public static int UdpDefaultPort { get; set; } = 6000;
         public static int FramesPerPacket { get; set; } = 352;
         public static int ChannelsPerFrame { get; set; } = 2;

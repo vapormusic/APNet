@@ -150,6 +150,9 @@ namespace AirTunesSharpTest
                     deviceOptions["volume"] = Int32.Parse(deviceOptions["volume"]);
                 }
 
+                // // 
+                // deviceOptions["airplay2"] = false;
+
 
                 // Create options object from TXT records
                 dynamic expando = new ExpandoObject();
@@ -188,6 +191,7 @@ namespace AirTunesSharpTest
                     {
                         Console.WriteLine("Progress set successfully");
                     }));
+                    
 
 
                     await Task.Delay(1000);
