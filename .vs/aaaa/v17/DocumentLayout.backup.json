@@ -7,6 +7,14 @@
       "RelativeMoniker": "D:0:0:{3DE13346-D809-BD6D-8BAB-E34B6A5FB033}|AirTunesSharpTest\\AirTunesSharpTest.csproj|solutionrelative:airtunessharptest\\airtunessharptest.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{0AB432BA-0C9D-040D-C416-ADFDE049FEC8}|AirTunesSharp\\AirTunesSharp.csproj|c:\\users\\vapormusic\\downloads\\aaaa\\airtunessharp\\airtunessharp.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{0AB432BA-0C9D-040D-C416-ADFDE049FEC8}|AirTunesSharp\\AirTunesSharp.csproj|solutionrelative:airtunessharp\\airtunessharp.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3DE13346-D809-BD6D-8BAB-E34B6A5FB033}|AirTunesSharpTest\\AirTunesSharpTest.csproj|c:\\users\\vapormusic\\downloads\\aaaa\\airtunessharptest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3DE13346-D809-BD6D-8BAB-E34B6A5FB033}|AirTunesSharpTest\\AirTunesSharpTest.csproj|solutionrelative:airtunessharptest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{0AB432BA-0C9D-040D-C416-ADFDE049FEC8}|AirTunesSharp\\AirTunesSharp.csproj|c:\\users\\vapormusic\\downloads\\aaaa\\airtunessharp\\airtunessharp\\devices\\airtunesdevice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0AB432BA-0C9D-040D-C416-ADFDE049FEC8}|AirTunesSharp\\AirTunesSharp.csproj|solutionrelative:airtunessharp\\airtunessharp\\devices\\airtunesdevice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -25,10 +33,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{0AB432BA-0C9D-040D-C416-ADFDE049FEC8}|AirTunesSharp\\AirTunesSharp.csproj|c:\\users\\vapormusic\\downloads\\aaaa\\airtunessharp\\airtunessharp\\network\\rtspclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0AB432BA-0C9D-040D-C416-ADFDE049FEC8}|AirTunesSharp\\AirTunesSharp.csproj|solutionrelative:airtunessharp\\airtunessharp\\network\\rtspclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{3DE13346-D809-BD6D-8BAB-E34B6A5FB033}|AirTunesSharpTest\\AirTunesSharpTest.csproj|c:\\users\\vapormusic\\downloads\\aaaa\\airtunessharptest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3DE13346-D809-BD6D-8BAB-E34B6A5FB033}|AirTunesSharpTest\\AirTunesSharpTest.csproj|solutionrelative:airtunessharptest\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,7 +42,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,43 +50,45 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "AirTunesDevice.cs",
-              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
-              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
-              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
-              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
-              "ViewState": "AgIAAPEAAAAAAAAAAAA6wK8AAAAdAAAAAAAAAA==",
+              "DocumentIndex": 7,
+              "Title": "RtspClient.cs",
+              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
+              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
+              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
+              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:29.424Z"
+              "WhenOpened": "2025-03-22T23:05:25.69Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "Devices.cs",
-              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
-              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
-              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
-              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\Program.cs",
+              "RelativeDocumentMoniker": "AirTunesSharpTest\\Program.cs",
+              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\Program.cs",
+              "RelativeToolTip": "AirTunesSharpTest\\Program.cs",
+              "ViewState": "AgIAAGMAAAAAAAAAAAApwHUAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:28.755Z"
+              "WhenOpened": "2025-03-22T22:24:00.904Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "UdpServers.cs",
-              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
-              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
-              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
-              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:27.85Z"
+              "DocumentIndex": 0,
+              "Title": "AirTunesSharpTest.csproj",
+              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\AirTunesSharpTest.csproj",
+              "RelativeDocumentMoniker": "AirTunesSharpTest\\AirTunesSharpTest.csproj",
+              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\AirTunesSharpTest.csproj",
+              "RelativeToolTip": "AirTunesSharpTest\\AirTunesSharpTest.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-03-22T22:22:52.185Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "Ntp.cs",
               "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\Ntp.cs",
               "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Network\\Ntp.cs",
@@ -95,39 +101,51 @@
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "RtspClient.cs",
-              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
-              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
-              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
-              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Network\\RtspClient.cs",
+              "Title": "UdpServers.cs",
+              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
+              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
+              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
+              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Network\\UdpServers.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T23:05:25.69Z"
+              "WhenOpened": "2025-03-22T23:05:27.85Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\Program.cs",
-              "RelativeDocumentMoniker": "AirTunesSharpTest\\Program.cs",
-              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\Program.cs",
-              "RelativeToolTip": "AirTunesSharpTest\\Program.cs",
-              "ViewState": "AgIAAGMAAAAAAAAAAAApwHUAAABHAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-22T22:24:00.904Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AirTunesSharpTest.csproj",
-              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\AirTunesSharpTest.csproj",
-              "RelativeDocumentMoniker": "AirTunesSharpTest\\AirTunesSharpTest.csproj",
-              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharpTest\\AirTunesSharpTest.csproj",
-              "RelativeToolTip": "AirTunesSharpTest\\AirTunesSharpTest.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "AirTunesSharp",
+              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp.csproj",
+              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp.csproj",
+              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp.csproj",
+              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-03-22T22:22:52.185Z",
+              "WhenOpened": "2025-03-25T19:31:38.18Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Devices.cs",
+              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
+              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
+              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
+              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Devices\\Devices.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-22T23:05:28.755Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AirTunesDevice.cs",
+              "DocumentMoniker": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
+              "RelativeDocumentMoniker": "AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
+              "ToolTip": "C:\\Users\\vapormusic\\Downloads\\aaaa\\AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
+              "RelativeToolTip": "AirTunesSharp\\AirTunesSharp\\Devices\\AirTunesDevice.cs",
+              "ViewState": "AgIAAPEAAAAAAAAAAAA6wK8AAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-22T23:05:29.424Z"
             }
           ]
         }

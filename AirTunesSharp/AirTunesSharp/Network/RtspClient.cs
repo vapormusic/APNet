@@ -294,7 +294,7 @@ namespace AirTunesSharp.Network
                         {
                             Debug.WriteLine("s2");
                             // if (this.debug) Debug.WriteLine("AUTH_SETUP", "nah");
-                            _status = OPTIONS;
+                            _status = (airplay2) ? PAIR_SETUP_1 : OPTIONS;
                             ClearTimeout();
                             SendNextRequest();
                             StartHeartBeat();
