@@ -51,6 +51,58 @@ namespace AirTunesSharpTest
                         airTunes.SetPasscode(key, code);
                     }
 
+                    if (status == "ready"){
+                    Console.WriteLine($"Device added with key: {key}");
+
+                    // Set volume
+                    Console.WriteLine("Setting volume to 20%...");
+                    airTunes.SetVolume(key, 20, (Action<object[]>)((args) =>
+                    {
+                        Console.WriteLine("Volume set successfully");
+                    }));
+
+                    // Set Progress
+                    // Console.WriteLine("Do it before playing , especially for Sonos devices cus they are a bich");
+                    // Set duration to 999999999 to make it infinite, AP receiver device will stop if duration is reached.
+                    if (false)
+                    airTunes.SetProgress(key, (0), 999999999, (Action<object[]>)((args) =>
+                    {
+                        Console.WriteLine("Progress set successfully");
+                    }));
+                    
+
+                    // Write audio data
+                    Console.WriteLine("Writing audio data...");
+                    bool writeResult = airTunes.Write(audioData.Take(352 * 4 * 300).ToArray());
+                    idx += 300;
+                    Console.WriteLine($"Write result: {writeResult}");
+
+                    // Wait a bit
+                    Console.WriteLine("Waiting for audio playback...");
+
+                    // Set track info
+                    // Console.WriteLine("Setting track info...");
+                    airTunes.SetTrackInfo(key, "Track 1: Ew", "Joji", "Nectar", (Action<object[]>)((args) =>
+                    {
+                        Console.WriteLine("Track info set successfully");
+                        byte[] artwork = System.IO.File.ReadAllBytes(".\\artwork.png");
+                        airTunes.SetArtwork(key, artwork, "image/png", (Action<object[]>)((args) =>
+                        {
+                            Console.WriteLine("Artwork set successfully");
+                        }));
+
+                    }));
+
+                    // /// Set artwork
+                    // Console.WriteLine("Setting artwork...");
+
+
+
+
+                    
+
+                    }
+
                 });
 
                 airTunes.On("buffer", (eventArgs) =>
@@ -93,7 +145,7 @@ namespace AirTunesSharpTest
                 Console.WriteLine($"Found {devices.Count} devices:");
                 foreach (var dev in devices)
                 {
-                    Console.WriteLine($"{dev["name"]} with address {dev["host"]}:{dev["port"]}");
+                    Console.WriteLine($"{dev["name"]} with address {dev["host"]}:{dev["port"]} from protocol {dev["type"]}");
                     Console.WriteLine($"Txt records: {string.Join(", ", dev["txt"])}");
                 }
 
@@ -170,60 +222,6 @@ namespace AirTunesSharpTest
 
                 if (device != null)
                 {
-                    Console.WriteLine($"Device added with key: {device.Key}");
-
-                    // Wait for device to be ready
-                    Console.WriteLine("Waiting for device to be ready...");
-                    await Task.Delay(5000);
-
-                    // Set volume
-                    Console.WriteLine("Setting volume to 20%...");
-                    airTunes.SetVolume(device.Key, 20, (Action<object[]>)((args) =>
-                    {
-                        Console.WriteLine("Volume set successfully");
-                    }));
-
-                    // Set Progress
-                    // Console.WriteLine("Do it before playing , especially for Sonos devices cus they are a bich");
-                    // Set duration to 999999999 to make it infinite, AP receiver device will stop if duration is reached.
-                    if (isSonos)
-                    airTunes.SetProgress(device.Key, (0), 999999999, (Action<object[]>)((args) =>
-                    {
-                        Console.WriteLine("Progress set successfully");
-                    }));
-                    
-
-
-                    await Task.Delay(1000);
-
-                    // Write audio data
-                    Console.WriteLine("Writing audio data...");
-                    bool writeResult = airTunes.Write(audioData.Take(352 * 4 * 300).ToArray());
-                    idx += 300;
-                    Console.WriteLine($"Write result: {writeResult}");
-
-                    // Wait a bit
-                    Console.WriteLine("Waiting for audio playback...");
-
-                    // Set track info
-                    // Console.WriteLine("Setting track info...");
-                    airTunes.SetTrackInfo(device.Key, "Track 1: Ew", "Joji", "Nectar", (Action<object[]>)((args) =>
-                    {
-                        Console.WriteLine("Track info set successfully");
-                    }));
-
-                    /// Set artwork
-                    Console.WriteLine("Setting artwork...");
-                    byte[] artwork = System.IO.File.ReadAllBytes(".\\artwork.png");
-
-                    airTunes.SetArtwork(device.Key, artwork, "image/png", (Action<object[]>)((args) =>
-                    {
-                        Console.WriteLine("Artwork set successfully");
-                    }));
-
-                    
-
-                    await Task.Delay(1000);
 
                     // End audio stream
                     // Console.WriteLine("Ending audio stream...");

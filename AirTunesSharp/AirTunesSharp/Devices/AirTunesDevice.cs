@@ -101,10 +101,9 @@ namespace AirTunesSharp.Devices
 
                 Console.WriteLine("ports args: " + args);
 
-                DoHandshake();
-            });
 
-            _udpServers.Bind(_host);
+            });
+            DoHandshake();
 
 
         }
@@ -125,7 +124,7 @@ namespace AirTunesSharp.Devices
                 if (setup.credentials != null)
                     _credentials = setup.credentials;
                 Console.WriteLine($"Server port: {_serverPort}, Control port: {_controlPort}, Timing port: {_timingPort}");
-                // _udpServers.Close();
+                _udpServers.Bind(_host, _controlPort, _timingPort);
                 
             });
 

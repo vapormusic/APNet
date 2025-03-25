@@ -114,7 +114,7 @@ namespace AirTunesSharp.Utils
             Console.WriteLine("\tTxt : [{0}]", string.Join(", ", service.Txt));
         }
 
-        private Dictionary<String, dynamic> parseTxt(string[] txt, bool airplay2 = false)
+        private Dictionary<String, dynamic> parseTxt(string[] txt, bool _isAirPlay = false)
         {
 
             var statusflags = new string[] { };
@@ -123,7 +123,9 @@ namespace AirTunesSharp.Utils
             bool needPassword = false;
             bool needPin = false;
             bool transient = false;
+            bool legacyPairing = false;
             var features = new string[] { };
+            bool airplay2 = false;
 
 
             //get txt starts with et= and check whether it contains 4
@@ -179,8 +181,23 @@ namespace AirTunesSharp.Utils
                 
                 if (features.Length > 48)
                 { transient = (features[features.Length - 1 - 48] == "1");}
-                if (features.Length > 46)
-                { airplay2 = (features[features.Length - 1 - 46] == "1");}
+                // AirPlay 2 = either bit 38, 46, 43 or 48 is set
+                if (features.Length > 36)
+                {   
+                    bool SupportsHKPairingAndAccessControl = false;
+                    bool SupportsCoreUtilsPairingAndEncryption = false;
+                    bool SupportsSystemPairing = false;
+                    if (features.Length > 46) SupportsHKPairingAndAccessControl = (features[features.Length - 1 - 46] == "1");
+                    if (features.Length > 38) SupportsCoreUtilsPairingAndEncryption = (features[features.Length - 1 - 38] == "1");              
+                    airplay2 = (SupportsHKPairingAndAccessControl || transient || SupportsSystemPairing || SupportsCoreUtilsPairingAndEncryption);
+                }
+                if (features.Length > 27)
+                { 
+                    legacyPairing = (features[features.Length - 1 - 27] == "1");
+                    Console.WriteLine("_isAirPlay: ", _isAirPlay);
+                    // For now, set legacyPairing to false if airplay2 is true
+                    if (airplay2) legacyPairing = false;
+                }
             }
 
             if (statusflags != null && statusflags.Length > 0)
@@ -243,15 +260,6 @@ namespace AirTunesSharp.Utils
             // // Console.WriteLine("AP2: " + options.airplay2.ToString());
             // Console.WriteLine("transient: " + transient.ToString());
 
-            // var APOptions = new AirTunesOptions();
-            // APOptions.alacEncoding = alacEncoding;
-            // APOptions.mode = mode;
-            // APOptions.needPassword = needPassword;
-            // APOptions.needPin = needPin;
-            // // APOptions.debug = options.debug;
-            // // APOptions.airplay2 = options.airplay2;
-            // APOptions.transient = transient;
-            // APOptions.txt = txt;
 
             return new Dictionary<String, dynamic>()
             {
@@ -262,6 +270,7 @@ namespace AirTunesSharp.Utils
                 { "transient", transient },
                 { "features", features },
                 { "statusflags", statusflags },
+                { "legacyPairing", legacyPairing },
                 { "isSonos", isSonos },
                 { "airplay2", airplay2 },
                 { "debug", true },

@@ -46,7 +46,7 @@ namespace AirTunesSharp.Network
         /// Binds UDP sockets to available ports
         /// </summary>
         /// <param name="host">Host to bind to</param>
-        public void Bind(string host)
+        public void Bind(string host, int? timingPort, int? controlPort)
         {
             _hosts.Add(host);
 
@@ -71,7 +71,7 @@ namespace AirTunesSharp.Network
 
             
            // Find open ports
-            BindPorts();
+            BindPorts(timingPort, controlPort);
 
             // Handle timing messages
             Task.Run(async () =>
@@ -167,11 +167,38 @@ namespace AirTunesSharp.Network
 
         }
 
-        private async void BindPorts()
+        private async void BindPorts(int? timingPort, int? controlPort)
         {
             var toBind = new List<UdpEndpoint> { _control, _timing };
             int currentPort = Config.UdpDefaultPort;
             bool success = true;
+
+            // Try to bind to specified ports first
+            if (controlPort.HasValue)
+            {
+                try
+                {
+                    _control.Socket.Client.Bind(new IPEndPoint(IPAddress.Any, controlPort.Value));
+                    _control.Port = controlPort.Value;
+                    toBind.Remove(_control);
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            if (timingPort.HasValue)
+            {
+                try
+                {
+                    _timing.Socket.Client.Bind(new IPEndPoint(IPAddress.Any, timingPort.Value));
+                    _timing.Port = timingPort.Value;
+                    toBind.Remove(_timing);
+                }
+                catch (Exception)
+                {
+                }
+            }
 
             while (toBind.Count > 0 && success)
             {

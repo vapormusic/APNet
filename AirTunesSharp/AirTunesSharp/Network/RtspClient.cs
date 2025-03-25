@@ -40,7 +40,7 @@ namespace AirTunesSharp.Network
         PAIR_VERIFY_2 = 11,
         OPTIONS2 = 12,
         AUTH_SETUP = 13,
-        PAIR_PIN_START = 14,
+        START_PAIRING = 14,
         PAIR_PIN_SETUP_1 = 15,
         PAIR_PIN_SETUP_2 = 16,
         PAIR_PIN_SETUP_3 = 17,
@@ -116,6 +116,7 @@ namespace AirTunesSharp.Network
         private byte[] encryptionKey;
         private bool encryptedChannel;
         private string hostip;
+        private int? hostport;
         private string homekitver;
 
         private Dictionary<string, string>? pair_verify_1_verifier;
@@ -135,6 +136,8 @@ namespace AirTunesSharp.Network
         private byte[] deviceProof;
         private SrpClient? srp;
         private TcpClient? eventsocket;
+
+        private bool legacyPairing = false;
 
         /// <summary>
         /// Initializes a new instance of the RtspClient class
@@ -173,6 +176,7 @@ namespace AirTunesSharp.Network
             dnstxt = options?.txt ?? new string[0];
             alacEncoding = options?.alacEncoding ?? true;
             needPassword = options?.needPassword ?? false;
+            legacyPairing = options?.legacyPairing ?? false;
             airplay2 = options?.airplay2 ?? false;
             needPin = options?.needPin ?? false;
             debug = options?.debug ?? false;
@@ -221,23 +225,65 @@ namespace AirTunesSharp.Network
             _controlPort = udpServers.Control.Port;
             _timingPort = udpServers.Timing.Port;
             hostip = host;
+            hostport = port;
 
-            _socket = new TcpClient();
-            _socket.ReceiveTimeout = 40000;
-            _socket.SendTimeout = 40000;           
+            // If we do legacy pairing, we need to connect to the RTSP server first
+            if (legacyPairing)
+            {
+                TcpClient tempTCP = new TcpClient(AddressFamily.InterNetwork);
+                tempTCP.ReceiveTimeout = 40000;
+                tempTCP.SendTimeout = 40000;
+                tempTCP.ConnectAsync(host, port).ContinueWith(t => {
+                    var request = MakeHead("POST", "/pair-pin-start", null, clear: true);
+
+                    request += "User-Agent: AirPlay/490.16\r\n";
+                    request += "Connection: keep-alive\r\n";
+                    request += "CSeq: " + "0" + "\r\n";
+                    request += "Content-Length:" + 0 + "\r\n\r\n";
+                    NetworkStream stream = tempTCP.GetStream();
+                    byte[] buffer = Encoding.UTF8.GetBytes(request);
+                    stream.Write(buffer, 0, buffer.Length);
+                    Emit("need_password");
+                });
+
+            }
+            else
+            {
+                _socket = new TcpClient(AddressFamily.InterNetwork);
+                SetupTCP(_socket, host, port);
+            }
+
+        }
+
+        private static bool IsSocketConnected(Socket socket)
+        {
             try
             {
-                _socket.ConnectAsync(host, port).ContinueWith(t => 
-                {
-                    if (t.IsFaulted)
-                    {
-                        Cleanup("connection_refused");
-                        return;
-                    }
+                return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
+            }
+            catch (SocketException) { return false; }
+        }
 
-                    if (needPassword || needPin)
+
+        public void SetupTCP(TcpClient socket, string host, int port)
+        {
+            _socket.ReceiveTimeout = 40000;
+            _socket.SendTimeout = 40000;
+            // _socket.Connect(host, port);
+            try
+            {
+                Console.WriteLine("Connecting to " + host + ":" + port);
+                _socket.ConnectAsync(host, port).ContinueWith(t =>
+                {
+                    // if (t.IsFaulted)
+                    // {
+                    //     Cleanup("connection_refused");
+                    //     return;
+                    // }
+
+                    if ((needPassword || needPin) && (airplay2 || legacyPairing))
                     {
-                        _status = PAIR_PIN_START;
+                        _status = START_PAIRING;
                         SendNextRequest();
                         StartHeartBeat();
                         ClearTimeout();
@@ -247,7 +293,7 @@ namespace AirTunesSharp.Network
                         if (this.mode != 2)
                         {
                             Debug.WriteLine("s2");
-                            if (this.debug) Debug.WriteLine("AUTH_SETUP", "nah");
+                            // if (this.debug) Debug.WriteLine("AUTH_SETUP", "nah");
                             _status = OPTIONS;
                             ClearTimeout();
                             SendNextRequest();
@@ -276,10 +322,10 @@ namespace AirTunesSharp.Network
                     bool encryptedOkay = false;
                     var encryptedBlob = new byte[0];
                     var decrpytedData = new byte[0];
-                    
+
                     int lastRead = 0;
 
-                    Task.Run(async () => 
+                    Task.Run(async () =>
                     {
                         try
                         {
@@ -302,7 +348,9 @@ namespace AirTunesSharp.Network
                                     if (this.encryptedChannel && this.credentials != null)
                                     {
                                         decrpytedData = this.credentials.decrypt(encryptedBlob);
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         decrpytedData = encryptedBlob;
                                     }
                                     lastRead = 0;
@@ -314,78 +362,26 @@ namespace AirTunesSharp.Network
 
                                     int endIndex = blob.ToString().IndexOf("\r\n\r\n");
                                     if (endIndex < 0)
-                                         continue;
+                                        continue;
 
                                     endIndex += 4;
-                                    string response = blob.ToString().Substring(0, endIndex);           
+                                    string response = blob.ToString().Substring(0, endIndex);
 
 
                                     Debug.WriteLine("Received:");
                                     Debug.WriteLine(Encoding.UTF8.GetString(decrpytedData));
-                                    ProcessData(response,decrpytedData);
+                                    ProcessData(response, decrpytedData);
                                     blob.Clear();
 
                                     if (endIndex < data.Length)
                                         blob.Append(data.Substring(endIndex));
                                     decrpytedData = new byte[0];
-                            }
-
-                                // int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                                // if (bytesRead <= 0)
-                                // {
-                                //     Cleanup("disconnected");
-                                //     break;
-                                // }
-
-                                // do             
-                                // {
-                                //     lastRead = stream.Read(buffer, 0, buffer.Length);
-                                //     ms.Write(buffer, 0, lastRead);
-                                // } while (lastRead > buffer.Length);
-
-                                // ClearTimeout();
-                                // encryptedBlob = encryptedBlob.Concat(buffer.Take(bytesRead).ToArray()).ToArray();
-
-                                // if (encryptedChannel && credentials != null)
-                                // {          
-
-                                //     byte[] lengthbytes = encryptedBlob.Take(2).ToArray();
-                                //     int length = BitConverter.ToUInt16(lengthbytes, 0);
-                                //     if (encryptedBlob.Length == length - 16 - 2)
-                                //     {
-                                //         buffer = credentials.decrypt(encryptedBlob);
-                                //         encryptedOkay = true;
-                                //         encryptedBlob = new byte[0];
-                                //     }
-
-                                // }
-                                // else {
-                                //     encryptedOkay = true;
-                                // }
-                                // if (encryptedOkay){
-
-                                //     string data = Encoding.UTF8.GetString(buffer, 0, Math.Min(bytesRead, buffer.Length));
-                                //     blob.Append(data);
-
-                                //     int endIndex = blob.ToString().IndexOf("\r\n\r\n");
-                                //     if (endIndex < 0 && encryptedOkay)
-                                //         continue;
-
-                                //     endIndex += 4;
-                                //     string response = blob.ToString().Substring(0, endIndex);                
-
-
-                                //     ProcessData(response, buffer);
-
-                                //     blob.Clear();
-                                //     if (endIndex < data.Length)
-                                //         blob.Append(data.Substring(endIndex));
-                                // }
+                                }
                             }
                         }
                         catch (Exception ex)
                         {
-                            if (_socket != null)
+                            if (_socket != null && _status != START_PAIRING && !legacyPairing)
                             {
                                 _socket = null;
                                 Console.WriteLine(ex.StackTrace);
@@ -402,7 +398,6 @@ namespace AirTunesSharp.Network
                 Cleanup("connection_refused");
             }
         }
-
         /// <summary>
         /// Starts the timeout timer
         /// </summary>
@@ -412,7 +407,7 @@ namespace AirTunesSharp.Network
             {
                 _timeout.Stop();
                 _timeout.Dispose();
-            } 
+            }
             _timeout = new System.Timers.Timer(Config.RtspTimeout);
             _timeout.Elapsed += (sender, e) => Cleanup("timeout");
             _timeout.AutoReset = false;
@@ -502,7 +497,7 @@ namespace AirTunesSharp.Network
         {
             if ((_status < 2) || ((_status > 10) && (_status < 26)))
             {
-               return;         
+                return;
             }
             if (name != _trackInfo?.Name || artist != _trackInfo?.Artist || album != _trackInfo?.Album)
             {
@@ -529,16 +524,16 @@ namespace AirTunesSharp.Network
         /// <param name="callback">Callback function</param>
         public void SetProgress(long progress, long duration, Action<object[]> callback)
         {
-            if ((_status < 2) || ((_status > 10) && (_status < 26))  )
+            if ((_status < 2) || ((_status > 10) && (_status < 26)))
             {
-               return;         
+                return;
             }
             this.progress = progress;
             this.duration = duration;
             _callback = callback;
             _status = SETPROGRESS;
             SendNextRequest();
-        } 
+        }
 
 
 
@@ -546,10 +541,19 @@ namespace AirTunesSharp.Network
         /// Sets the passcode for pairing
         /// </summary>
         /// <param name="passcode">Passcode</param>
-        public void SetPasscode(string passcode) {
+        public void SetPasscode(string passcode)
+        {
             _password = passcode;
-            _status = this.airplay2 ? PAIR_SETUP_1 : (this.needPin ? PAIR_PIN_SETUP_1 : OPTIONS);
-            SendNextRequest();
+            _status = this.airplay2 ? PAIR_SETUP_1 : ((this.needPin || (legacyPairing)) ? PAIR_PIN_SETUP_1 : OPTIONS);
+            if (_socket == null)
+            {
+                _socket = new TcpClient(AddressFamily.InterNetwork);
+                SetupTCP(_socket, hostip, hostport.Value);
+            }
+            else
+            {
+                SendNextRequest();
+            }
         }
 
         /// <summary>
@@ -560,9 +564,9 @@ namespace AirTunesSharp.Network
         /// <param name="callback">Callback function</param>
         public void SetArtwork(byte[] art, string? contentType, Action<object[]> callback)
         {
-            if ((_status < 2) || ((_status > 10) && (_status < 26))  )
+            if ((_status < 2) || ((_status > 10) && (_status < 26)))
             {
-               return;         
+                return;
             }
 
 
@@ -639,25 +643,25 @@ namespace AirTunesSharp.Network
             string[] headers_p = responseText.Split(new string[] { "\r\n\r\n" }, StringSplitOptions.None);
             string[] headerLines = headers_p[0].Split(new string[] { "\r\n" }, StringSplitOptions.None);
             string[] statusLine = headerLines[0].Split(" ");
-    
+
             byte[] body = new byte[0];
             if (headers_p.Length > 1)
             {
                 body = rawData.Skip(headers_p[0].Length + 4).ToArray();
             }
-            
+
 
             if (response.Code >= 400 & response.Code != 416)
             {
                 if (response.Code == 401 && !_passwordTried && (_password != null && _password.Length > 0))
                 {
                     _passwordTried = true;
-                    
+
                     // Extract digest auth parameters
-                    string authHeader = response.Headers.ContainsKey("WWW-Authenticate") 
-                        ? response.Headers["WWW-Authenticate"] 
+                    string authHeader = response.Headers.ContainsKey("WWW-Authenticate")
+                        ? response.Headers["WWW-Authenticate"]
                         : null;
-                    
+
                     if (authHeader != null && authHeader.StartsWith("Digest"))
                     {
                         _digestInfo = ParseDigestAuth(authHeader);
@@ -666,7 +670,7 @@ namespace AirTunesSharp.Network
                         _digestInfo["realm"] = _digestInfo["realm"].Trim('"');
                         _digestInfo["nonce"] = _digestInfo["nonce"].Trim('"');
                         SendNextRequest(_digestInfo);
-                       
+
                         return;
                     }
                 }
@@ -681,10 +685,11 @@ namespace AirTunesSharp.Network
                 //     Cleanup("rtsp_error", response.Status);
                 //     return;
                 // }
-                if(response.Code == 403 && _status == ANNOUNCE && this.mode == 2) {
-                        _status = AUTH_SETUP;
-                        SendNextRequest();
-                        return;
+                if (response.Code == 403 && _status == ANNOUNCE && this.mode == 2)
+                {
+                    _status = AUTH_SETUP;
+                    SendNextRequest();
+                    return;
                 }
 
                 if (response.Code == 453)
@@ -701,15 +706,19 @@ namespace AirTunesSharp.Network
                         if ((new int[] {PAIR_VERIFY_1,
                               PAIR_VERIFY_2,
                               AUTH_SETUP,
-                              PAIR_PIN_START,
+                              START_PAIRING,
                               PAIR_PIN_SETUP_1,
                               PAIR_PIN_SETUP_2,
                               PAIR_PIN_SETUP_3}).Contains(_status))
                         {
                             Emit("pair_failed", "");
                         }
+                        // // Don't close the server if we're just setting the volume or artwork ...
+                        // if (!(new int[] {SETART, SETDAAP, SETPROGRESS, SETVOLUME}).Contains(_status))
+                        // {
                         Cleanup("rtsp_error", response.Status);
                         return;
+                        // }
                     }
                 }
             }
@@ -723,11 +732,19 @@ namespace AirTunesSharp.Network
 
             switch (_status)
             {
-                case PAIR_PIN_START:
-                    if (!this.transient && _password == null) { 
+                case START_PAIRING:
+                    if (!this.transient && ((_password == null) || legacyPairing))
+                    {
                         Emit("need_password");
                     }
                     _status = airplay2 ? PAIR_SETUP_1 : PAIR_PIN_SETUP_1;
+                    // if (_status == PAIR_PIN_SETUP_1 && legacyPairing)
+                    // {
+                    //     _socket.Close();
+                    //     _socket.Dispose();
+                    //     _socket = new TcpClient(AddressFamily.InterNetwork);
+                    //     SetupTCP(_socket, hostip, hostport.Value); 
+                    // }
                     break;
                 case PAIR_PIN_SETUP_1:
                     var N = "AC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC319294" +
@@ -784,7 +801,8 @@ namespace AirTunesSharp.Network
                     Debug.WriteLine("yah");
                     Dictionary<byte, byte[]> databuf1 = Tlv.Decode(body);
                     Debug.WriteLine(databuf1.ToString());
-                    if (databuf1.ContainsKey(TlvTag.BackOff)) {
+                    if (databuf1.ContainsKey(TlvTag.BackOff))
+                    {
                         byte[] backOff = databuf1[TlvTag.BackOff];
                         int seconds = BitConverter.ToInt16(backOff, 0);
 
@@ -834,7 +852,9 @@ namespace AirTunesSharp.Network
                         this.M1Session = this.srp.DeriveSession(this._hap_genkey, this._atv_pub_key, this._atv_salt, "Pair-Setup", this.srp.DerivePrivateKey(this._atv_salt, "Pair-Setup", _password));
                         this.M1 = M1Session.Proof;
                         _status = PAIR_SETUP_2;
-                    } else {
+                    }
+                    else
+                    {
                         Emit("end", "no pk");
                         Cleanup("pair_failed");
                         return;
@@ -944,12 +964,13 @@ namespace AirTunesSharp.Network
                     NSDictionary sa1_bplist = BinaryPropertyListParser.Parse(body) as NSDictionary;
                     Debug.WriteLine(sa1_bplist.ToXmlPropertyList());
                     _eventPort = ((NSNumber)sa1_bplist.ObjectForKey("eventPort")).ToInt();
-                    if (sa1_bplist.TryGetValue("timingPort", out NSObject timingPort)) {
+                    if (sa1_bplist.TryGetValue("timingPort", out NSObject timingPort))
+                    {
                         this._timingDestPort = ((NSNumber)sa1_bplist.ObjectForKey("timingPort")).ToInt();
                     }
                     Debug.WriteLine("timing port parsing ", _eventPort.ToString());
                     _status = SETPEERS;
-                    
+
                     break;
                 case SETUP_AP2_2:
                     NSDictionary sa2_bplist = BinaryPropertyListParser.Parse(body) as NSDictionary;
@@ -987,29 +1008,33 @@ namespace AirTunesSharp.Network
                 case HEARTBEAT:
                     if (_status != SETDAAP && _status != SETART)
                         _status = PLAYING;
-                break;
+                    break;
                 case OPTIONS:
-                    if(response.Headers.ContainsKey("Apple-Response"))
+                    if (response.Headers.ContainsKey("Apple-Response"))
                         _requireEncryption = true;
-                    if (response.Code == 401) {
+                    if (response.Code == 401)
+                    {
                         _passwordTried = false;
                         _status = OPTIONS2;
-                    } else {
-                        _status = (_session != null) ? PLAYING : (this.airplay2 ? PAIR_PIN_START : ANNOUNCE);
-                        if (_status == ANNOUNCE) { Emit("pair_success"); };
                     }
-                    break;  
+                    else
+                    {
+                        _status = (_session != null) ? PLAYING : (this.airplay2 ? START_PAIRING : ANNOUNCE);
+                        if (_status == ANNOUNCE & !(legacyPairing || airplay2)) { Emit("pair_success"); }
+                        ;
+                    }
+                    break;
                 case OPTIONS2:
                     // if (response.Code == 401) {
                     //     _status = AUTH_SETUP;
                     // } else {
-                        _status = ANNOUNCE;
+                    _status = ANNOUNCE;
                     // }
-                    break;           
+                    break;
                 case ANNOUNCE:
                     _status = SETUP;
                     break;
-                    
+
                 case SETUP:
 
                     if (response.Headers.ContainsKey("Session"))
@@ -1036,7 +1061,7 @@ namespace AirTunesSharp.Network
                     }
 
                     Console.WriteLine("New ports: " + _controlPort + " " + _timingPort + " " + _serverPort);
-                    
+
                     Emit("config", new
                     {
                         audioLatency = 0,
@@ -1048,7 +1073,7 @@ namespace AirTunesSharp.Network
                     });
                     _status = RECORD;
                     break;
-                    
+
                 case RECORD:
                     if (_status != SETDAAP && _status != SETART && _status != SETVOLUME && _status != SETPROGRESS)
                         _status = PLAYING;
@@ -1057,7 +1082,7 @@ namespace AirTunesSharp.Network
                 case SETPROGRESS:
                     if (_status != SETDAAP && _status != SETART && _status != SETVOLUME)
                         _status = PLAYING;
-                    break;    
+                    break;
                 case SETVOLUME:
                     if (_status != SETDAAP && _status != SETART && _status != SETPROGRESS)
                         _status = PLAYING;
@@ -1070,13 +1095,13 @@ namespace AirTunesSharp.Network
                     if (_status != SETVOLUME && _status != SETDAAP && _status != SETPROGRESS)
                         _status = PLAYING;
                     break;
-                    
+
                 case TEARDOWN:
                     Cleanup("stopped");
                     break;
             }
-
-            SendNextRequest();
+            if (_status != PLAYING)
+                SendNextRequest();
         }
 
         /// <summary>
@@ -1088,7 +1113,7 @@ namespace AirTunesSharp.Network
         {
             var result = new Dictionary<string, string>();
             string[] parts = authHeader.Substring(7).Split(',');
-            
+
             foreach (var part in parts)
             {
                 int equalsPos = part.IndexOf('=');
@@ -1096,15 +1121,15 @@ namespace AirTunesSharp.Network
                 {
                     string key = part.Substring(0, equalsPos).Trim();
                     string value = part.Substring(equalsPos + 1).Trim();
-                    
+
                     // Remove quotes if present
                     if (value.StartsWith("\"") && value.EndsWith("\""))
                         value = value.Substring(1, value.Length - 2);
-                        
+
                     result[key] = value;
                 }
             }
-            
+
             return result;
         }
 
@@ -1118,13 +1143,14 @@ namespace AirTunesSharp.Network
         private string MakeHead(string method, string uri, Dictionary<string, string>? digestInfo = null, bool md5Uppercase = true, bool clear = false)
         {
             string head = $"{method} {uri} RTSP/1.0\r\n";
-            if (!clear) {
-              head +=  $"CSeq: {NextCSeq()}\r\n" +
-                $"User-Agent: {Config.UserAgent}\r\n" +
-                $"DACP-ID: {_dacpId.ToUpper()}\r\n" +
-                $"Client-Instance: {_dacpId.ToUpper()}\r\n" +
-                (_session != null ? $"Session: {_session}\r\n" : "") +
-                $"Active-Remote: {_activeRemote}\r\n";
+            if (!clear)
+            {
+                head += $"CSeq: {NextCSeq()}\r\n" +
+                  $"User-Agent: {Config.UserAgent}\r\n" +
+                  $"DACP-ID: {_dacpId.ToUpper()}\r\n" +
+                  $"Client-Instance: {_dacpId.ToUpper()}\r\n" +
+                  (_session != null ? $"Session: {_session}\r\n" : "") +
+                  $"Active-Remote: {_activeRemote}\r\n";
             }
             if (digestInfo != null || _digestInfo != null)
             {
@@ -1134,7 +1160,7 @@ namespace AirTunesSharp.Network
                 string realm = digestInfo["realm"];
                 string password = digestInfo["password"];
                 string nonce = digestInfo["nonce"];
-                
+
                 string ha1 = Md5($"{username}:{realm}:{password}", md5Uppercase);
                 string ha2 = Md5($"{method}:{uri}", md5Uppercase);
                 string diResponse = Md5($"{ha1}:{nonce}:{ha2}", md5Uppercase);
@@ -1160,7 +1186,7 @@ namespace AirTunesSharp.Network
         {
             if (_socket == null)
                 throw new InvalidOperationException("Socket is not connected");
-                
+
             IPEndPoint localEndPoint = (IPEndPoint)_socket.Client.LocalEndPoint;
             // Get ipv4 address
 
@@ -1169,21 +1195,23 @@ namespace AirTunesSharp.Network
             return MakeHead(method, uri, digestInfo);
         }
 
-        
+
         public byte[] DaapEncodeList(string field, string encoding = "ascii", params byte[][] values)
         {
             byte[] value = ConcatArrays(values);
             byte[] buf = new byte[field.Length + 4];
-            if (encoding == "utf-8") {
+            if (encoding == "utf-8")
+            {
                 Encoding.UTF8.GetBytes(field).CopyTo(buf, 0);
             }
-            else {
+            else
+            {
                 Encoding.ASCII.GetBytes(field).CopyTo(buf, 0);
             }
 
             BitConverter.GetBytes((uint)value.Length).CopyTo(buf, field.Length);
             Array.Reverse(buf, field.Length, 4); // Ensure big-endian order
-            
+
             return ConcatArrays(buf, value);
         }
 
@@ -1191,16 +1219,18 @@ namespace AirTunesSharp.Network
         {
             byte[] valueBytes = Encoding.ASCII.GetBytes(value);
             byte[] buf = new byte[field.Length + valueBytes.Length + 4];
-            if (encoding == "utf-8") {
+            if (encoding == "utf-8")
+            {
                 Encoding.UTF8.GetBytes(field).CopyTo(buf, 0);
             }
-            else {
+            else
+            {
                 Encoding.ASCII.GetBytes(field).CopyTo(buf, 0);
             }
             BitConverter.GetBytes((uint)valueBytes.Length).CopyTo(buf, field.Length);
             Array.Reverse(buf, field.Length, 4); // Ensure big-endian order
             valueBytes.CopyTo(buf, field.Length + 4);
-            
+
             return buf;
         }
 
@@ -1208,7 +1238,7 @@ namespace AirTunesSharp.Network
         {
             int length = 0;
             foreach (var arr in arrays) length += arr.Length;
-            
+
             byte[] result = new byte[length];
             int offset = 0;
             foreach (var arr in arrays)
@@ -1216,7 +1246,7 @@ namespace AirTunesSharp.Network
                 Buffer.BlockCopy(arr, 0, result, offset, arr.Length);
                 offset += arr.Length;
             }
-            
+
             return result;
         }
 
@@ -1242,14 +1272,14 @@ namespace AirTunesSharp.Network
             byte[] body = [];
 
             if (forcedStatus != null)
-                _status = forcedStatus.Value ;
-            
-            
+                _status = forcedStatus.Value;
+
+
             Console.WriteLine($"Sending request: {_status}");
 
             switch (forcedStatus ?? _status)
             {
-                case PAIR_PIN_START:
+                case START_PAIRING:
                     I = "366B4165DD64AD3A";
                     P = null;
                     s = null;
@@ -1267,26 +1297,33 @@ namespace AirTunesSharp.Network
                     credentials = null;
                     verifier_hap_1 = null;
                     encryptionKey = null;
-                    if (needPin ||airplay2)
+                    if (needPin || (legacyPairing && needPassword))
                     {
-                        request = MakeHead("POST", "/pair-pin-start", null, clear: true);
                         if (airplay2)
                         {
+                            request = MakeHead("POST", "/pair-pin-start", null, clear: true);
 
                             request += "User-Agent: AirPlay/490.16\r\n";
                             request += "Connection: keep-alive\r\n";
                             request += "CSeq: " + "0" + "\r\n";
 
+                            // }
+                            request += "Content-Length:" + 0 + "\r\n\r\n";
                         }
-                        request += "Content-Length:" + 0 + "\r\n\r\n";
-                        
-                    } else
+                        else
+                        {
+                            _status = PAIR_PIN_SETUP_1;
+                            SendNextRequest();
+                            return;
+                        }
+                    }
+                    else
                     {
                         if (_password == null)
                         {
                             Emit("need_password");
                         }
-                        _status = airplay2 ? INFO : (needPin ? PAIR_PIN_SETUP_1: OPTIONS);
+                        _status = airplay2 ? INFO : (needPin ? PAIR_PIN_SETUP_1 : OPTIONS);
                         SendNextRequest();
                         return;
                     }
@@ -1299,14 +1336,15 @@ namespace AirTunesSharp.Network
                     {
                         BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
                         NSDictionary dict = new NSDictionary();
-                        dict.Add("user", "366B4165DD64AD3A");
                         dict.Add("method", "pin");
+                        dict.Add("user", "60:4C:2b:54:D1:73");
                         bplist.Write(dict);
                         byte[] bpbuf = memoryStream.ToArray();
                         body = bpbuf;
 
                         request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
-                    };
+                    }
+                    ;
 
                     break;
                 case PAIR_PIN_SETUP_2:
@@ -1323,7 +1361,8 @@ namespace AirTunesSharp.Network
                         body = bpbuf;
 
                         request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
-                    };
+                    }
+                    ;
                     break;
                 case PAIR_PIN_SETUP_3:
                     request = MakeHead("POST", "/pair-setup-pin", null, clear: true);
@@ -1339,7 +1378,8 @@ namespace AirTunesSharp.Network
                         body = bpbuf;
 
                         request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
-                    };
+                    }
+                    ;
                     break;
                 case PAIR_VERIFY_1:
                     request = MakeHead("POST", "/pair-verify", null, clear: true);
@@ -1347,7 +1387,7 @@ namespace AirTunesSharp.Network
                     pair_verify_1_verifier = LegacyATVVerifier.verifier(authSecret);
                     request += "Content-Length:" + pair_verify_1_verifier["verifierBody"].Length + "\r\n\r\n";
                     body = Convert.FromHexString(pair_verify_1_verifier["verifierBody"]);
-        
+
                     break;
                 case PAIR_VERIFY_2:
                     request = MakeHead("POST", "/pair-verify", null, clear: true);
@@ -1410,12 +1450,12 @@ namespace AirTunesSharp.Network
                     request += "Connection: keep-alive\r\n";
                     request += "X-Apple-HKP: " + this.homekitver + "\r\n";
                     request += "Content-Type: application/octet-stream\r\n";
-                    K = Convert.FromHexString(srp.DeriveSession(_hap_genkey, 
-                                                                _atv_pub_key, 
-                                                                _atv_salt, 
-                                                                "Pair-Setup", 
-                                                                srp.DerivePrivateKey(_atv_salt, 
-                                                                                          "Pair-Setup", 
+                    K = Convert.FromHexString(srp.DeriveSession(_hap_genkey,
+                                                                _atv_pub_key,
+                                                                _atv_salt,
+                                                                "Pair-Setup",
+                                                                srp.DerivePrivateKey(_atv_salt,
+                                                                                          "Pair-Setup",
                                                                                           _password)).Key);
                     seed = new byte[32];
                     RandomNumberGenerator rng = RandomNumberGenerator.Create();
@@ -1537,7 +1577,8 @@ namespace AirTunesSharp.Network
 
                         request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
 
-                    };
+                    }
+                    ;
                     break;
                 case SETPEERS:
                     request = MakeHeadWithURL("SETPEERS", digestInfo);
@@ -1545,7 +1586,7 @@ namespace AirTunesSharp.Network
                     using (var memoryStream = new MemoryStream())
                     {
                         BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
-                        NSArray dictv = new NSArray {this.hostip,((IPEndPoint)_socket?.Client.LocalEndPoint).Address.MapToIPv4().ToString()};
+                        NSArray dictv = new NSArray { this.hostip, ((IPEndPoint)_socket?.Client.LocalEndPoint).Address.MapToIPv4().ToString() };
                         //dictv.Insert(0,this.hostip);
                         //dictv.Insert(1,();
                         bplist.Write(dictv);
@@ -1554,7 +1595,8 @@ namespace AirTunesSharp.Network
 
                         request += "Content-Length:" + bpbuf.Length + "\r\n\r\n";
 
-                    };
+                    }
+                    ;
                     break;
                 case FLUSH:
                     request = MakeHeadWithURL("FLUSH", digestInfo);
@@ -1572,7 +1614,7 @@ namespace AirTunesSharp.Network
                     {
                         BinaryPropertyListWriter bplist = new BinaryPropertyListWriter(memoryStream);
                         NSDictionary streams = new NSDictionary();
-                        
+
                         NSDictionary stream = new NSDictionary();
                         stream.Add("audioFormat", 262144); // PCM/44100/16/2 262144
                         stream.Add("audioMode", "default");
@@ -1587,7 +1629,7 @@ namespace AirTunesSharp.Network
                         stream.Add("type", 0x60);
                         stream.Add("supportsDynamicStreamID", false);
                         stream.Add("streamConnectionID", _announceId);
-                        NSArray array = new NSArray { stream};
+                        NSArray array = new NSArray { stream };
                         streams.Add("streams", array);
                         bplist.Write(streams);
                         byte[] bpbuf = memoryStream.ToArray();
@@ -1599,6 +1641,9 @@ namespace AirTunesSharp.Network
 
                     break;
                 case HEARTBEAT:
+                    request += MakeHead("OPTIONS", "*", null);
+                    // request += "Apple-Challenge: SdX9kFJVxgKVMFof/Znj4Q\r\n\r\n";
+                    break;
                 case OPTIONS:
                     request += MakeHead("OPTIONS", "*", digestInfo);
                     request += "Apple-Challenge: SdX9kFJVxgKVMFof/Znj4Q\r\n\r\n";
@@ -1609,12 +1654,12 @@ namespace AirTunesSharp.Network
                     break;
                 case ANNOUNCE:
                     _announceId = NumUtil.RandomInt(8).ToString();
-                    
+
                     if (_socket == null)
                         throw new InvalidOperationException("Socket is not connected");
-                        
+
                     IPEndPoint localEndPoint = (IPEndPoint)_socket.Client.LocalEndPoint;
-                    
+
                     body_str =
                         "v=0\r\n" +
                         $"o=iTunes {_announceId} 0 IN IP4 {localEndPoint.Address.MapToIPv4()}\r\n" +
@@ -1624,7 +1669,7 @@ namespace AirTunesSharp.Network
                         "m=audio 0 RTP/AVP 96\r\n" +
                         "a=rtpmap:96 AppleLossless\r\n" +
                         "a=fmtp:96 352 0 16 40 10 14 2 255 0 0 44100\r\n";
-                        
+
                     if (_requireEncryption)
                     {
                         body_str +=
@@ -1649,10 +1694,11 @@ namespace AirTunesSharp.Network
 
                 case RECORD:
 
-                    if (this.airplay2 != null && this.credentials != null) {
-                        this.eventsocket = new TcpClient();
+                    if (this.airplay2 != null && this.credentials != null)
+                    {
+                        this.eventsocket = new TcpClient(AddressFamily.InterNetwork);
 
-                        this.eventsocket.ConnectAsync(this.hostip, (int) _eventPort);
+                        this.eventsocket.ConnectAsync(this.hostip, (int)_eventPort);
                         if (_announceId == null)
                         {
                             _announceId = Utils.NumUtil.randomInt(10).ToString();
@@ -1669,7 +1715,9 @@ namespace AirTunesSharp.Network
                         request += "Range: npt=0-\r\n";
                         request += MakeRtpInfo() + "\r\n";
 
-                    } else {
+                    }
+                    else
+                    {
                         request += MakeHeadWithURL("RECORD", digestInfo);
                         request += MakeRtpInfo();
                         request += "Range: npt=0-\r\n\r\n";
@@ -1678,16 +1726,18 @@ namespace AirTunesSharp.Network
 
                 case SETVOLUME:
                     double attenuation = 0;
-                    if (_volume == 0) {
+                    if (_volume == 0)
+                    {
                         attenuation = 144.0;
                     }
-                    else {
+                    else
+                    {
                         attenuation = (-30.0) * (100.0 - (_volume)) / 100.0;
                     }
 
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += "Content-Type: text/parameters\r\n";
-                    body_str = $"volume: {attenuation :F6}\r\n";
+                    body_str = $"volume: {attenuation:F6}\r\n";
                     body = Encoding.UTF8.GetBytes(body_str);
                     request += $"Content-Length: {body.Length}\r\n\r\n";
                     break;
@@ -1697,7 +1747,8 @@ namespace AirTunesSharp.Network
                     request += "\r\n";
                     break;
                 case SETPROGRESS:
-                    string hms(int seconds) {
+                    string hms(int seconds)
+                    {
                         return TimeSpan.FromSeconds(seconds).ToString(@"hh\:mm\:ss");
                     }
                     long position = (long)(this.starttime + (this.progress) * (int)(Math.Floor((2 * 44100) / (352 / 125) / 0.71)));
@@ -1716,25 +1767,25 @@ namespace AirTunesSharp.Network
                     string daapenc = "ascii";
                     //daapenc = true
                     byte[] name = DaapEncode("minm", daapenc, _trackInfo.Name);
-                    byte[] artist = DaapEncode("asar", daapenc , _trackInfo.Artist);
+                    byte[] artist = DaapEncode("asar", daapenc, _trackInfo.Artist);
                     byte[] album = DaapEncode("asal", daapenc, _trackInfo.Album);
                     byte[][] trackargs = new byte[][] { name, artist, album };
 
                     byte[] daapInfo = DaapEncodeList("mlit", daapenc, trackargs);
-                        
+
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += "Content-Type: application/x-dmap-tagged\r\n";
-                    
+
                     body = daapInfo;
 
-                    
+
                     request += $"Content-Length: {daapInfo.Length}\r\n\r\n";
                     break;
 
                 case SETART:
                     if (_artwork == null || _artworkContentType == null)
                         return;
-                        
+
                     request += MakeHeadWithURL("SET_PARAMETER", digestInfo);
                     request += $"Content-Type: {_artworkContentType}\r\n";
                     body = _artwork;
@@ -1776,7 +1827,7 @@ namespace AirTunesSharp.Network
             {
                 byte[] inputBytes = Encoding.ASCII.GetBytes(input);
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
-                
+
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < hashBytes.Length; i++)
                 {
@@ -1800,7 +1851,7 @@ namespace AirTunesSharp.Network
         public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
 
         public string Body { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Parses an RTSP response
         /// </summary>
@@ -1812,9 +1863,9 @@ namespace AirTunesSharp.Network
             {
                 Headers = new Dictionary<string, string>()
             };
-            
+
             string[] lines = blob.Split(new[] { "\r\n" }, StringSplitOptions.None);
-            
+
             // Parse status line
             var codeRes = System.Text.RegularExpressions.Regex.Match(lines[0], @"(\w+)\/(\S+) (\d+) (.*)");
             if (!codeRes.Success)
@@ -1823,16 +1874,16 @@ namespace AirTunesSharp.Network
                 response.Status = "UNEXPECTED " + lines[0];
                 return response;
             }
-            
+
             response.Code = int.Parse(codeRes.Groups[3].Value);
             response.Status = codeRes.Groups[4].Value;
-            
+
             // Parse headers
             for (int i = 1; i < lines.Length; i++)
             {
                 if (string.IsNullOrEmpty(lines[i]))
                     continue;
-                    
+
                 var headerMatch = System.Text.RegularExpressions.Regex.Match(lines[i], @"([^:]+):\s*(.*)");
                 if (headerMatch.Success)
                 {
@@ -1841,7 +1892,7 @@ namespace AirTunesSharp.Network
             }
 
             response.Body = string.Join("\r\n", lines, 1, lines.Length - 1);
-            
+
             return response;
         }
     }
