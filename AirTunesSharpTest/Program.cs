@@ -62,7 +62,7 @@ namespace AirTunesSharpTest
                     }));
 
                     // Set Progress
-                    // Console.WriteLine("Do it before playing , especially for Sonos devices cus they are a bich");
+                    // Console.WriteLine("Do it before playing , especially for Sonos devices");
                     // Set duration to 999999999 to make it infinite, AP receiver device will stop if duration is reached.
                     if (false)
                     airTunes.SetProgress(key, (0), 999999999, (Action<object[]>)((args) =>
